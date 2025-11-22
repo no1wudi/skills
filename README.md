@@ -8,10 +8,14 @@ The directory structure and file names indicate the specific domain and purpose 
 
 ### NuttX Domain
 
-- **[Creating NuttX Applications Guide](nuttx/create-apps.md)** - Comprehensive guide for creating NuttX applications including file templates, build system integration, and coding conventions.
+- **[Creating NuttX Applications Guide](nuttx/creating-applications.md)** - Comprehensive guide for creating NuttX applications including file templates, build system integration, and coding conventions.
 
-- **[Writing NuttX Sensor Drivers Guide](nuttx/sensor-drivers.md)** - Complete guide for creating sensor drivers in NuttX, covering both character device and uORB implementations with I2C communication patterns.
+- **[Creating NuttX Sensor Drivers Guide](nuttx/creating-sensor-drivers.md)** - Complete guide for creating sensor drivers in NuttX, covering both character device and uORB implementations with I2C communication patterns.
 
-- **[NuttX Out-of-Tree Configurations Guide](nuttx/board-out-of-tree-configs.md)** - Complete guide for creating custom configurations for existing NuttX boards without modifying upstream code, including directory patterns, build system integration, and best practices.
+- **[NuttX Out-of-Tree Configurations Guide](nuttx/out-of-tree-board-configs.md)** - Complete guide for creating custom configurations for existing NuttX boards without modifying upstream code, including directory patterns, build system integration, and best practices.
 
-- **[NuttX Out-of-Tree Board Creation Guide](nuttx/board-out-of-tree-creation.md)** - Comprehensive guide for creating completely new custom NuttX boards from scratch, covering both board creation and configuration patterns with practical examples and code templates.
+- **[NuttX Out-of-Tree Board Creation Guide](nuttx/out-of-tree-board-creation.md)** - Comprehensive guide for creating completely new custom NuttX boards from scratch, covering both board creation and configuration patterns with practical examples and code templates.
+
+### WAMR Domain
+
+- **[WAMR AOT Compilation Guide with wamrc](wamr/wamrc-aot-compilation.md)** - Complete guide for using wamrc to produce optimal AOT files for common CPU targets, including ARM and RISC-V architectures, with support for both XIP and non-XIP scenarios, featuring practical examples and optimization strategies.
