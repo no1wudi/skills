@@ -1,52 +1,32 @@
-# Writing NuttX Sensor Drivers Guide
+# Writing NuttX Sensor Drivers Guide (uORB)
 
-This guide provides comprehensive instructions for creating sensor drivers in NuttX, covering both character device and uORB (Micro Object Request Broker) implementations.
+This guide provides instructions for creating uORB-based sensor drivers in NuttX.
 
 ## Overview
 
-NuttX supports two main paradigms for sensor drivers:
-
-1. **Character Device Drivers** - Direct device interface through `/dev/*`
-2. **uORB Drivers** - Message-based interface for publish/subscribe patterns
+NuttX sensor drivers using the uORB (Micro Object Request Broker) framework provide:
+- Publish/subscribe pattern for sensor data
+- Automatic character device creation at `/dev/uorb/sensor_XXX`
+- Ring buffer management and multi-subscriber support
+- Standardized sensor data structures
 
 ## Driver Structure
 
-A NuttX sensor driver requires the following essential files:
+A uORB sensor driver requires only 2 files:
 
 ```
 nuttx/drivers/sensors/
-├── your_device_base.h          # Hardware abstraction header (private)
-├── your_device_base.c          # Hardware abstraction implementation
-├── your_device.c               # Character device implementation
-├── your_device_uorb.c          # uORB implementation (optional)
-└── Make.defs                   # Added to drivers/sensors/Make.defs
+├── your_device_uorb.c          # Complete uORB sensor driver
+└── Make.defs                   # Build configuration (update existing)
 
 nuttx/include/nuttx/sensors/
 └── your_device.h               # Public API header
 
 nuttx/drivers/sensors/
-└── Kconfig                     # Configuration options (added to existing file)
+└── Kconfig                     # Configuration options (update existing)
 ```
 
-## Architecture Pattern
-
-### 1. Three-Layer Architecture
-
-**Base Layer** (`*_base.h/c`):
-- Hardware abstraction (I2C communication)
-- Device-specific operations (calibration, data reading)
-- Shared between character and uORB implementations
-
-**Interface Layer** (`*.c`):
-- Character device: File operations (`read`, `write`, `ioctl`)
-- uORB device: Sensor framework operations (`activate`, `set_interval`)
-
-**API Layer** (`*.h`):
-- Public registration functions
-- Configuration-dependent interface selection
-- Board integration entry points
-
-## Character Device Implementation
+## Implementation
 
 ### 1. Public API Header (`include/nuttx/sensors/your_device.h`)
 
@@ -80,64 +60,41 @@ nuttx/drivers/sensors/
 
 /****************************************************************************
  * Included Files
- *****************************************************************************/
+ ****************************************************************************/
 
 #include <nuttx/config.h>
 
 /****************************************************************************
- * Pre-processor Definitions
- *****************************************************************************/
-
-/* Configuration ************************************************************/
-
-/* Prerequisites:
- *
- * CONFIG_SENSORS_YOUR_DEVICE
- *   Enables support for the Your Device driver
- */
-
-/****************************************************************************
  * Public Types
- *****************************************************************************/
+ ****************************************************************************/
 
 struct i2c_master_s;
 
 /****************************************************************************
  * Public Function Prototypes
- *****************************************************************************/
+ ****************************************************************************/
 
 #ifdef __cplusplus
-#define EXTERN extern "C"
 extern "C"
 {
-#else
-#define EXTERN extern
 #endif
 
 /****************************************************************************
- * Name: your_device_register
+ * Name: your_device_register_uorb
  *
  * Description:
- *   Register the Your Device character device as 'devpath'
+ *   Register the sensor as uORB device, creates /dev/uorb/sensor_accelX
  *
  * Input Parameters:
- *   path/no - The full path (or number) to the driver to register.
- *             E.g.:("/dev/sensor0", i2c) or (0, i2c)
- *   i2c     - An instance of the I2C interface to use to communicate with
- *             Your Device
+ *   devno   - Sensor device instance number (0 = sensor_accel0)
+ *   i2c     - I2C interface to communicate with sensor
  *
  * Returned Value:
  *   Zero (OK) on success; a negated errno value on failure.
- *
  ****************************************************************************/
 
-#ifndef CONFIG_SENSORS_YOUR_DEVICE_UORB
-int your_device_register(FAR const char *devpath, FAR struct i2c_master_s *i2c);
-#else
 int your_device_register_uorb(int devno, FAR struct i2c_master_s *i2c);
-#endif /* CONFIG_SENSORS_YOUR_DEVICE_UORB */
 
-#undef EXTERN
 #ifdef __cplusplus
 }
 #endif
@@ -146,602 +103,7 @@ int your_device_register_uorb(int devno, FAR struct i2c_master_s *i2c);
 #endif /* __INCLUDE_NUTTX_SENSORS_YOUR_DEVICE_H */
 ```
 
-### 2. Hardware Abstraction Header (`drivers/sensors/your_device_base.h`)
-
-```c
-/****************************************************************************
- * drivers/sensors/your_device_base.h
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.  The
- * ASF licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations
- * under the License.
- *
- ****************************************************************************/
-
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <nuttx/config.h>
-
-#include <inttypes.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <debug.h>
-
-#include <nuttx/kmalloc.h>
-#include <nuttx/signal.h>
-#include <nuttx/fs/fs.h>
-#include <nuttx/i2c/i2c_master.h>
-#include <nuttx/sensors/your_device.h>
-
-#if defined(CONFIG_I2C) && defined(CONFIG_SENSORS_YOUR_DEVICE)
-
-/****************************************************************************
- * Pre-processor Definitions
- *****************************************************************************/
-
-/* Your sensor I2C address */
-#define YOUR_DEVICE_ADDR         0x19
-#define YOUR_DEVICE_FREQ         400000
-#define YOUR_DEVICE_DEVID        0x55
-
-/* Register addresses */
-#define YOUR_DEVICE_REG_STATUS   0x00
-#define YOUR_DEVICE_REG_DATA     0x01
-#define YOUR_DEVICE_REG_CONFIG   0x02
-#define YOUR_DEVICE_REG_ID       0x0f
-
-/* Configuration flags */
-#define YOUR_DEVICE_ENABLE       0x01
-#define YOUR_DEVICE_DISABLE      0x00
-
-/****************************************************************************
- * Private Type
- ****************************************************************************/
-
-struct your_device_dev_s
-{
-  FAR struct i2c_master_s *i2c;      /* I2C interface */
-  uint8_t addr;                      /* Your Device I2C address */
-  int freq;                          /* Your Device Frequency */
-  mutex_t dev_lock;                  /* Mutex for device access */
-  
-  /* Add your sensor-specific configuration fields here */
-  uint8_t acc_range;
-  uint8_t gyro_range;
-  uint8_t sample_mode;
-};
-
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-/* I2C communication helpers */
-uint8_t your_device_getreg8(FAR struct your_device_dev_s *priv, uint8_t regaddr);
-uint16_t your_device_getreg16(FAR struct your_device_dev_s *priv, uint8_t regaddr);
-void your_device_putreg8(FAR struct your_device_dev_s *priv, uint8_t regaddr,
-                        uint8_t regval);
-
-/* Device operations */
-int your_device_checkid(FAR struct your_device_dev_s *priv);
-int your_device_reset(FAR struct your_device_dev_s *priv);
-int your_device_init(FAR struct your_device_dev_s *dev);
-
-/* Data structures */
-struct your_device_data_s
-{
-  int16_t x;        /* X-axis raw value */
-  int16_t y;        /* Y-axis raw value */
-  int16_t z;        /* Z-axis raw value */
-  uint32_t timestamp; /* Timestamp in milliseconds */
-};
-
-/* Data reading functions */
-int your_device_read_data(FAR struct your_device_dev_s *priv,
-                         FAR struct your_device_data_s *data);
-int your_device_readregs(FAR struct your_device_dev_s *priv, uint8_t regaddr,
-                         FAR uint8_t *buffer, uint8_t len);
-
-#endif /* CONFIG_I2C && CONFIG_SENSORS_YOUR_DEVICE */
-```
-
-### 3. Character Device Driver (`drivers/sensors/your_device.c`)
-
-```c
-/****************************************************************************
- * drivers/sensors/your_device.c
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.  The
- * ASF licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations
- * under the License.
- *
- ****************************************************************************/
-
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <nuttx/config.h>
-#include <nuttx/arch.h>
-#include <nuttx/kmalloc.h>
-#include <nuttx/fs/fs.h>
-#include <nuttx/i2c/i2c_master.h>
-#include <nuttx/mutex.h>
-#include <nuttx/signal.h>
-#include <debug.h>
-#include <errno.h>
-#include <string.h>
-
-#include "your_device_base.h"
-
-/****************************************************************************
- * Pre-processor Definitions
- *****************************************************************************/
-
-#ifndef CONFIG_YOUR_DEVICE_I2C_FREQUENCY
-#  define CONFIG_YOUR_DEVICE_I2C_FREQUENCY 400000 /* 400 KHz */
-#endif
-
-/* Debug features */
-#ifdef CONFIG_DEBUG_SENSORS
-#  define snerr(format, ...)    _err(format, ##__VA_ARGS__)
-#  define sninfo(format, ...)   _info(format, ##__VA_ARGS__)
-#else
-#  define snerr(format, ...)
-#  define sninfo(format, ...)
-#endif
-
-/****************************************************************************
- * Private Function Prototypes
- *****************************************************************************/
-
-/* Character device file operations */
-static int your_device_open(FAR struct file *filep);
-static int your_device_close(FAR struct file *filep);
-static ssize_t your_device_read(FAR struct file *filep, FAR char *buffer, size_t buflen);
-static int your_device_ioctl(FAR struct file *filep, int cmd, unsigned long arg);
-
-/****************************************************************************
- * Private Data
- *****************************************************************************/
-
-static const struct file_operations g_your_device_fops =
-{
-  your_device_open,                   /* open */
-  your_device_close,                  /* close */
-  your_device_read,                   /* read */
-  NULL,                               /* write */
-  NULL,                               /* seek */
-  your_device_ioctl,                  /* ioctl */
-};
-
-/****************************************************************************
- * Public Functions
- *****************************************************************************/
-
-/****************************************************************************
- * your_device_register
- ****************************************************************************/
-
-int your_device_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
-{
-  FAR struct your_device_dev_s *priv;
-  int ret;
-
-  DEBUGASSERT(devpath != NULL && i2c != NULL);
-
-  priv = (FAR struct your_device_dev_s *)
-          kmm_malloc(sizeof(struct your_device_dev_s));
-  if (priv == NULL)
-    {
-      snerr("Failed to allocate instance\n");
-      return -ENOMEM;
-    }
-
-  priv->i2c = i2c;
-  priv->addr = YOUR_DEVICE_ADDR;
-  priv->freq = CONFIG_YOUR_DEVICE_I2C_FREQUENCY;
-
-  ret = register_driver(devpath, &g_your_device_fops, 0666, priv);
-  if (ret < 0)
-    {
-      snerr("Failed to register driver: %d\n", ret);
-      kmm_free(priv);
-      return ret;
-    }
-
-  ret = your_device_init(priv);
-  if (ret < 0)
-    {
-      snerr("Failed to initialize your_device: %d\n", ret);
-      unregister_driver(devpath);
-      kmm_free(priv);
-      return ret;
-    }
-
-  sninfo("your_device registered at %s\n", devpath);
-  return OK;
-}
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * your_device_open
- ****************************************************************************/
-
-static int your_device_open(FAR struct file *filep)
-{
-  return OK;
-}
-
-/****************************************************************************
- * your_device_close
- ****************************************************************************/
-
-static int your_device_close(FAR struct file *filep)
-{
-  return OK;
-}
-
-/****************************************************************************
- * your_device_read
- ****************************************************************************/
-
-static ssize_t your_device_read(FAR struct file *filep, FAR char *buffer, size_t buflen)
-{
-  FAR struct inode *inode = filep->f_inode;
-  FAR struct your_device_dev_s *priv = inode->i_private;
-  struct your_device_data_s data;
-  int ret;
-
-  if (!priv || !buffer)
-    {
-      return -EINVAL;
-    }
-
-  if (buflen < sizeof(struct your_device_data_s))
-    {
-      return -EOVERFLOW;
-    }
-
-  /* Acquire device lock */
-  ret = nxmutex_lock(&priv->dev_lock);
-  if (ret < 0)
-    {
-      return ret;
-    }
-
-  /* Read sensor data */
-  ret = your_device_read_data(priv, &data);
-  if (ret < 0)
-    {
-      nxmutex_unlock(&priv->dev_lock);
-      return ret;
-    }
-
-  /* Copy data to user buffer */
-  memcpy(buffer, &data, sizeof(struct your_device_data_s));
-
-  nxmutex_unlock(&priv->dev_lock);
-  return sizeof(struct your_device_data_s);
-}
-
-/****************************************************************************
- * your_device_ioctl
- ****************************************************************************/
-
-static int your_device_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
-{
-  FAR struct inode *inode = filep->f_inode;
-  FAR struct your_device_dev_s *priv = inode->i_private;
-  int ret = OK;
-
-  if (!priv)
-    {
-      return -ENODEV;
-    }
-
-  /* Acquire device lock */
-  ret = nxmutex_lock(&priv->dev_lock);
-  if (ret < 0)
-    {
-      return ret;
-    }
-
-  switch (cmd)
-    {
-    /* Add your sensor-specific ioctl commands here */
-
-    default:
-      sninfo("Unknown IOCTL command: 0x%04x\n", cmd);
-      ret = -ENOTTY;
-      break;
-    }
-
-  nxmutex_unlock(&priv->dev_lock);
-  return ret;
-}
-```
-
-### 4. Hardware Abstraction Implementation (`drivers/sensors/your_device_base.c`)
-
-```c
-/****************************************************************************
- * drivers/sensors/your_device_base.c
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.  The
- * ASF licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations
- * under the License.
- *
- ****************************************************************************/
-
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <nuttx/config.h>
-#include <nuttx/i2c/i2c_master.h>
-#include <debug.h>
-#include <errno.h>
-
-#include "your_device_base.h"
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * your_device_getreg8
- ****************************************************************************/
-
-uint8_t your_device_getreg8(FAR struct your_device_dev_s *priv, uint8_t regaddr)
-{
-  struct i2c_msg_s msg[2];
-  uint8_t regval = 0;
-  int ret;
-
-  /* Setup read transaction */
-  msg[0].frequency = priv->freq;
-  msg[0].addr      = priv->addr;
-  msg[0].flags     = 0;
-  msg[0].buffer    = &regaddr;
-  msg[0].length    = 1;
-
-  msg[1].frequency = priv->freq;
-  msg[1].addr      = priv->addr;
-  msg[1].flags     = I2C_M_READ;
-  msg[1].buffer    = &regval;
-  msg[1].length    = 1;
-
-  ret = I2C_TRANSFER(priv->i2c, msg, 2);
-  return (ret < 0) ? 0 : regval;
-}
-
-/****************************************************************************
- * your_device_getreg16
- ****************************************************************************/
-
-uint16_t your_device_getreg16(FAR struct your_device_dev_s *priv, uint8_t regaddr)
-{
-  struct i2c_msg_s msg[2];
-  uint8_t buffer[2];
-  int ret;
-
-  /* Setup read transaction */
-  msg[0].frequency = priv->freq;
-  msg[0].addr      = priv->addr;
-  msg[0].flags     = 0;
-  msg[0].buffer    = &regaddr;
-  msg[0].length    = 1;
-
-  msg[1].frequency = priv->freq;
-  msg[1].addr      = priv->addr;
-  msg[1].flags     = I2C_M_READ;
-  msg[1].buffer    = buffer;
-  msg[1].length    = 2;
-
-  ret = I2C_TRANSFER(priv->i2c, msg, 2);
-  return (ret < 0) ? 0 : (uint16_t)(buffer[0] | (buffer[1] << 8));
-}
-
-/****************************************************************************
- * your_device_putreg8
- ****************************************************************************/
-
-void your_device_putreg8(FAR struct your_device_dev_s *priv, uint8_t regaddr,
-                        uint8_t regval)
-{
-  struct i2c_msg_s msg;
-  uint8_t data[2];
-
-  data[0] = regaddr;
-  data[1] = regval;
-
-  msg.frequency = priv->freq;
-  msg.addr      = priv->addr;
-  msg.flags     = 0;
-  msg.buffer    = data;
-  msg.length    = 2;
-
-  I2C_TRANSFER(priv->i2c, &msg, 1);
-}
-
-/****************************************************************************
- * your_device_checkid
- ****************************************************************************/
-
-int your_device_checkid(FAR struct your_device_dev_s *priv)
-{
-  uint8_t devid = your_device_getreg8(priv, YOUR_DEVICE_REG_ID);
-  
-  if (devid != YOUR_DEVICE_DEVID)
-    {
-      snerr("Wrong device ID: %02x, expected: %02x\n", 
-            devid, YOUR_DEVICE_DEVID);
-      return -ENODEV;
-    }
-
-  return OK;
-}
-
-/****************************************************************************
- * your_device_reset
- ****************************************************************************/
-
-int your_device_reset(FAR struct your_device_dev_s *priv)
-{
-  /* Add reset sequence if needed */
-  return OK;
-}
-
-/****************************************************************************
- * your_device_init
- ****************************************************************************/
-
-int your_device_init(FAR struct your_device_dev_s *dev)
-{
-  int ret;
-
-  if (!dev)
-    {
-      return -EINVAL;
-    }
-
-  /* Initialize mutex for thread safety */
-  nxmutex_init(&dev->dev_lock);
-
-  /* Check device identification */
-  ret = your_device_checkid(dev);
-  if (ret < 0)
-    {
-      snerr("Device identification failed: %d\n", ret);
-      nxmutex_destroy(&dev->dev_lock);
-      return ret;
-    }
-
-  /* Reset device */
-  ret = your_device_reset(dev);
-  if (ret < 0)
-    {
-      snerr("Device reset failed: %d\n", ret);
-      nxmutex_destroy(&dev->dev_lock);
-      return ret;
-    }
-
-  /* Configure device for your sensor requirements */
-  /* Add your sensor-specific configuration here */
-
-  return OK;
-}
-
-/****************************************************************************
- * your_device_read_data
- ****************************************************************************/
-
-int your_device_read_data(FAR struct your_device_dev_s *priv,
-                         FAR struct your_device_data_s *data)
-{
-  uint8_t buffer[6];
-  int ret;
-
-  if (!priv || !data)
-    {
-      return -EINVAL;
-    }
-
-  /* Read sensor data registers */
-  ret = your_device_readregs(priv, YOUR_DEVICE_REG_DATA, buffer, 6);
-  if (ret < 0)
-    {
-      return ret;
-    }
-
-  /* Parse data (adjust based on your sensor's protocol) */
-  data->x = (int16_t)(buffer[0] | (buffer[1] << 8));
-  data->y = (int16_t)(buffer[2] | (buffer[3] << 8));
-  data->z = (int16_t)(buffer[4] | (buffer[5] << 8));
-
-  return OK;
-}
-
-/****************************************************************************
- * your_device_readregs
- ****************************************************************************/
-
-int your_device_readregs(FAR struct your_device_dev_s *priv, uint8_t regaddr,
-                         FAR uint8_t *buffer, uint8_t len)
-{
-  struct i2c_msg_s msg[2];
-  int ret;
-
-  if (!priv || !buffer || len == 0)
-    {
-      return -EINVAL;
-    }
-
-  /* Setup read transaction */
-  msg[0].frequency = priv->freq;
-  msg[0].addr      = priv->addr;
-  msg[0].flags     = 0;
-  msg[0].buffer    = &regaddr;
-  msg[0].length    = 1;
-
-  msg[1].frequency = priv->freq;
-  msg[1].addr      = priv->addr;
-  msg[1].flags     = I2C_M_READ;
-  msg[1].buffer    = buffer;
-  msg[1].length    = len;
-
-  ret = I2C_TRANSFER(priv->i2c, msg, 2);
-  return (ret < 0) ? ret : OK;
-}
-```
-
-## uORB Implementation
-
-### 5. uORB Driver (`drivers/sensors/your_device_uorb.c`)
+### 2. uORB Driver (`drivers/sensors/your_device_uorb.c`)
 
 ```c
 /****************************************************************************
@@ -771,601 +133,700 @@ int your_device_readregs(FAR struct your_device_dev_s *priv, uint8_t regaddr,
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/arch.h>
+#include <nuttx/i2c/i2c_master.h>
 #include <nuttx/kmalloc.h>
 #include <nuttx/mutex.h>
 #include <nuttx/wqueue.h>
-#include <nuttx/i2c/i2c_master.h>
 #include <nuttx/sensors/sensor.h>
+#include <nuttx/sensors/your_device.h>
 #include <debug.h>
 #include <errno.h>
-#include <string.h>
 
-#include "your_device_base.h"
-
-/* Include standard sensor data structures */
-#include <nuttx/sensors/sensor.h>
+#if defined(CONFIG_I2C) && defined(CONFIG_SENSORS_YOUR_DEVICE)
 
 /****************************************************************************
  * Pre-processor Definitions
- *****************************************************************************/
+ ****************************************************************************/
+
+/* Device I2C configuration */
 
 #ifndef CONFIG_YOUR_DEVICE_I2C_FREQUENCY
-#  define CONFIG_YOUR_DEVICE_I2C_FREQUENCY 400000 /* 400 KHz */
+#  define CONFIG_YOUR_DEVICE_I2C_FREQUENCY 400000
 #endif
 
-#ifdef CONFIG_SENSORS_YOUR_DEVICE_POLL
-#  ifndef CONFIG_SENSORS_YOUR_DEVICE_POLL_INTERVAL
-#    define CONFIG_SENSORS_YOUR_DEVICE_POLL_INTERVAL 1000000 /* 1 second */
-#  endif
-#endif
+#define YOUR_DEVICE_ADDR         0x6a  /* I2C address */
+#define YOUR_DEVICE_FREQ         CONFIG_YOUR_DEVICE_I2C_FREQUENCY
+#define YOUR_DEVICE_DEVID        0x55  /* Device ID */
 
-/* Debug features */
-#ifdef CONFIG_DEBUG_SENSORS
-#  define snerr(format, ...)    _err(format, ##__VA_ARGS__)
-#  define sninfo(format, ...)   _info(format, ##__VA_ARGS__)
-#else
-#  define snerr(format, ...)
-#  define sninfo(format, ...)
-#endif
+/* Register addresses */
+
+#define YOUR_DEVICE_REG_WHO_AM_I 0x0f
+#define YOUR_DEVICE_REG_CTRL1    0x20
+#define YOUR_DEVICE_REG_STATUS   0x27
+#define YOUR_DEVICE_REG_OUT_X_L  0x28
+
+/* Configuration */
+
+#define YOUR_DEVICE_MIN_INTERVAL 10000  /* 10ms minimum interval */
 
 /****************************************************************************
  * Private Types
- *****************************************************************************/
+ ****************************************************************************/
 
-/* Sensor lower half structure */
 struct your_device_sensor_s
 {
-  struct sensor_lowerhalf_s lower;     /* Sensor lower half interface */
-#ifdef CONFIG_SENSORS_YOUR_DEVICE_POLL
-  struct work_s work;                  /* Work queue for polling mode */
-  uint64_t last_update;                /* Last update timestamp */
-  uint32_t interval;                   /* Polling interval in microseconds */
-#endif
-  FAR struct your_device_dev_s *dev;   /* Pointer to base device */
-  float scale;                         /* Scale factor for data conversion */
-  bool enabled;                        /* Sensor enabled flag */
-};
-
-/* Complete uORB device structure */
-struct your_device_uorb_dev_s
-{
-  struct your_device_dev_s base;       /* Base device structure */
-  struct your_device_sensor_s sensor;  /* Sensor interface */
+  struct sensor_lowerhalf_s lower;     /* Must be first! */
+  FAR struct i2c_master_s *i2c;        /* I2C interface */
+  struct work_s work;                  /* Work queue for polling */
+  mutex_t dev_lock;                    /* Device access mutex */
+  uint32_t interval;                   /* Polling interval (us) */
+  uint8_t addr;                        /* I2C address */
+  int freq;                            /* I2C frequency */
+  bool enabled;                        /* Sensor enabled */
 };
 
 /****************************************************************************
  * Private Function Prototypes
- *****************************************************************************/
+ ****************************************************************************/
 
-/* Sensor methods */
-static int your_device_activate(FAR struct sensor_lowerhalf_s *lower,
-                                FAR struct file *filep, bool enable);
-#ifdef CONFIG_SENSORS_YOUR_DEVICE_POLL
-static int your_device_set_interval(FAR struct sensor_lowerhalf_s *lower,
-                                   FAR struct file *filep,
-                                   FAR uint32_t *period_us);
-static void your_device_worker(FAR void *arg);
-#else
-static int your_device_fetch(FAR struct sensor_lowerhalf_s *lower,
-                            FAR struct file *filep,
-                            FAR char *buffer, size_t buflen);
-#endif
+/* I2C helpers */
+
+static uint8_t your_device_getreg8(FAR struct your_device_sensor_s *priv,
+                                   uint8_t regaddr);
+static void your_device_putreg8(FAR struct your_device_sensor_s *priv,
+                                uint8_t regaddr, uint8_t regval);
+static int your_device_readregs(FAR struct your_device_sensor_s *priv,
+                                uint8_t regaddr, FAR uint8_t *buffer,
+                                uint8_t len);
+
+/* Device operations */
+
+static int your_device_checkid(FAR struct your_device_sensor_s *priv);
+static int your_device_init(FAR struct your_device_sensor_s *priv);
 
 /* Sensor operations */
-static int your_device_read_data(FAR struct your_device_dev_s *dev,
-                                FAR struct sensor_accel *data);
+
+static int your_device_activate(FAR struct sensor_lowerhalf_s *lower,
+                                FAR struct file *filep, bool enable);
+static int your_device_set_interval(FAR struct sensor_lowerhalf_s *lower,
+                                    FAR struct file *filep,
+                                    FAR uint32_t *period_us);
+static void your_device_worker(FAR void *arg);
 
 /****************************************************************************
  * Private Data
- *****************************************************************************/
-
-/* Sensor operation table */
-static const struct sensor_ops_s g_sensor_ops =
-{
-  .activate     = your_device_activate,     /* Enable/disable sensor */
-#ifdef CONFIG_SENSORS_YOUR_DEVICE_POLL
-  .set_interval = your_device_set_interval, /* Set polling interval */
-#else
-  .fetch        = your_device_fetch,        /* Fetch sensor data */
-#endif
-};
-
-/****************************************************************************
- * Public Functions
- *****************************************************************************/
-
-/****************************************************************************
- * your_device_register_uorb
  ****************************************************************************/
 
-int your_device_register_uorb(int devno, FAR struct i2c_master_s *i2c)
+static const struct sensor_ops_s g_sensor_ops =
 {
-  FAR struct your_device_uorb_dev_s *dev;
-  struct sensor_lowerhalf_s *lower;
-  int ret = OK;
-
-  if (!i2c)
-    {
-      return -EINVAL;
-    }
-
-  dev = (FAR struct your_device_uorb_dev_s *)
-        kmm_zalloc(sizeof(struct your_device_uorb_dev_s));
-  if (!dev)
-    {
-      return -ENOMEM;
-    }
-
-  /* Initialize base device */
-  dev->base.i2c = i2c;
-  dev->base.addr = YOUR_DEVICE_ADDR;
-  dev->base.freq = CONFIG_YOUR_DEVICE_I2C_FREQUENCY;
-
-  /* Initialize sensor interface */
-  lower = &dev->sensor.lower;
-  lower->type = SENSOR_TYPE_ACCELEROMETER;  /* Adjust based on your sensor type */
-  lower->nbuffer = 2;                       /* Buffer size for sensor data */
-  lower->ops = &g_sensor_ops;
-
-  dev->sensor.dev = &dev->base;
-  dev->sensor.enabled = false;
-#ifdef CONFIG_SENSORS_YOUR_DEVICE_POLL
-  dev->sensor.interval = CONFIG_SENSORS_YOUR_DEVICE_POLL_INTERVAL;
-  dev->sensor.last_update = 0;
-  memset(&dev->sensor.work, 0, sizeof(dev->sensor.work));
-  dev->sensor.scale = 1.0f;  /* Adjust based on your sensor */
-#endif
-
-  /* Initialize base device */
-  ret = your_device_init(&dev->base);
-  if (ret < 0)
-    {
-      snerr("Failed to initialize your_device: %d\n", ret);
-      goto errout;
-    }
-
-  /* Register sensor with the sensor framework */
-  ret = sensor_register(lower, devno);
-  if (ret < 0)
-    {
-      snerr("Failed to register your_device: %d\n", ret);
-      goto errout;
-    }
-
-  return ret;
-
-errout:
-  kmm_free(dev);
-  return ret;
-}
+  .activate     = your_device_activate,
+  .set_interval = your_device_set_interval,
+};
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
- * your_device_activate
+ * Name: your_device_getreg8
+ ****************************************************************************/
+
+static uint8_t your_device_getreg8(FAR struct your_device_sensor_s *priv,
+                                   uint8_t regaddr)
+{
+  struct i2c_msg_s msg[2];
+  uint8_t regval = 0;
+
+  msg[0].frequency = priv->freq;
+  msg[0].addr      = priv->addr;
+  msg[0].flags     = 0;
+  msg[0].buffer    = &regaddr;
+  msg[0].length    = 1;
+
+  msg[1].frequency = priv->freq;
+  msg[1].addr      = priv->addr;
+  msg[1].flags     = I2C_M_READ;
+  msg[1].buffer    = &regval;
+  msg[1].length    = 1;
+
+  if (I2C_TRANSFER(priv->i2c, msg, 2) < 0)
+    {
+      return 0;
+    }
+
+  return regval;
+}
+
+/****************************************************************************
+ * Name: your_device_putreg8
+ ****************************************************************************/
+
+static void your_device_putreg8(FAR struct your_device_sensor_s *priv,
+                                uint8_t regaddr, uint8_t regval)
+{
+  struct i2c_msg_s msg;
+  uint8_t data[2];
+
+  data[0] = regaddr;
+  data[1] = regval;
+
+  msg.frequency = priv->freq;
+  msg.addr      = priv->addr;
+  msg.flags     = 0;
+  msg.buffer    = data;
+  msg.length    = 2;
+
+  I2C_TRANSFER(priv->i2c, &msg, 1);
+}
+
+/****************************************************************************
+ * Name: your_device_readregs
+ ****************************************************************************/
+
+static int your_device_readregs(FAR struct your_device_sensor_s *priv,
+                                uint8_t regaddr, FAR uint8_t *buffer,
+                                uint8_t len)
+{
+  struct i2c_msg_s msg[2];
+
+  msg[0].frequency = priv->freq;
+  msg[0].addr      = priv->addr;
+  msg[0].flags     = 0;
+  msg[0].buffer    = &regaddr;
+  msg[0].length    = 1;
+
+  msg[1].frequency = priv->freq;
+  msg[1].addr      = priv->addr;
+  msg[1].flags     = I2C_M_READ;
+  msg[1].buffer    = buffer;
+  msg[1].length    = len;
+
+  return I2C_TRANSFER(priv->i2c, msg, 2);
+}
+
+/****************************************************************************
+ * Name: your_device_checkid
+ ****************************************************************************/
+
+static int your_device_checkid(FAR struct your_device_sensor_s *priv)
+{
+  uint8_t devid;
+
+  devid = your_device_getreg8(priv, YOUR_DEVICE_REG_WHO_AM_I);
+  if (devid != YOUR_DEVICE_DEVID)
+    {
+      snerr("Wrong device ID: 0x%02x, expected: 0x%02x\n",
+            devid, YOUR_DEVICE_DEVID);
+      return -ENODEV;
+    }
+
+  return OK;
+}
+
+/****************************************************************************
+ * Name: your_device_init
+ ****************************************************************************/
+
+static int your_device_init(FAR struct your_device_sensor_s *priv)
+{
+  int ret;
+
+  /* Initialize mutex */
+
+  nxmutex_init(&priv->dev_lock);
+
+  /* Check device ID */
+
+  ret = your_device_checkid(priv);
+  if (ret < 0)
+    {
+      snerr("Device check failed: %d\n", ret);
+      nxmutex_destroy(&priv->dev_lock);
+      return ret;
+    }
+
+  /* Configure device (example: enable sensor, set ODR to 100Hz) */
+
+  your_device_putreg8(priv, YOUR_DEVICE_REG_CTRL1, 0x57);
+
+  sninfo("Device initialized successfully\n");
+  return OK;
+}
+
+/****************************************************************************
+ * Name: your_device_activate
  ****************************************************************************/
 
 static int your_device_activate(FAR struct sensor_lowerhalf_s *lower,
                                 FAR struct file *filep, bool enable)
 {
-  FAR struct your_device_sensor_s *sensor = (FAR struct your_device_sensor_s *)lower;
-  FAR struct your_device_dev_s *dev = sensor->dev;
-  int ret = OK;
+  FAR struct your_device_sensor_s *priv =
+    (FAR struct your_device_sensor_s *)lower;
 
-  /* Acquire device lock */
-  ret = nxmutex_lock(&dev->dev_lock);
-  if (ret < 0)
-    {
-      return ret;
-    }
+  priv->enabled = enable;
 
-  sensor->enabled = enable;
-
-#ifdef CONFIG_SENSORS_YOUR_DEVICE_POLL
   if (enable)
     {
-      /* Start polling work */
-      work_queue(HPWORK, &sensor->work, your_device_worker, sensor, 0);
+      /* Start polling worker */
+
+      work_queue(HPWORK, &priv->work, your_device_worker, priv, 0);
     }
   else
     {
-      /* Stop polling work */
-      work_cancel(HPWORK, &sensor->work);
-    }
-#endif
+      /* Stop polling worker */
 
-  nxmutex_unlock(&dev->dev_lock);
-  return ret;
-}
-
-#ifdef CONFIG_SENSORS_YOUR_DEVICE_POLL
-/****************************************************************************
- * your_device_set_interval
- ****************************************************************************/
-
-static int your_device_set_interval(FAR struct sensor_lowerhalf_s *lower,
-                                   FAR struct file *filep,
-                                   FAR uint32_t *period_us)
-{
-  FAR struct your_device_sensor_s *sensor = (FAR struct your_device_sensor_s *)lower;
-
-  if (period_us)
-    {
-      sensor->interval = *period_us;
+      work_cancel(HPWORK, &priv->work);
     }
 
   return OK;
 }
 
 /****************************************************************************
- * your_device_worker
+ * Name: your_device_set_interval
+ ****************************************************************************/
+
+static int your_device_set_interval(FAR struct sensor_lowerhalf_s *lower,
+                                    FAR struct file *filep,
+                                    FAR uint32_t *period_us)
+{
+  FAR struct your_device_sensor_s *priv =
+    (FAR struct your_device_sensor_s *)lower;
+
+  /* Enforce minimum interval */
+
+  if (*period_us < YOUR_DEVICE_MIN_INTERVAL)
+    {
+      *period_us = YOUR_DEVICE_MIN_INTERVAL;
+    }
+
+  priv->interval = *period_us;
+  return OK;
+}
+
+/****************************************************************************
+ * Name: your_device_worker
  ****************************************************************************/
 
 static void your_device_worker(FAR void *arg)
 {
-  FAR struct your_device_sensor_s *sensor = (FAR struct your_device_sensor_s *)arg;
+  FAR struct your_device_sensor_s *priv =
+    (FAR struct your_device_sensor_s *)arg;
   struct sensor_accel data;
-  uint64_t timestamp;
+  uint8_t buffer[6];
   int ret;
 
-  if (!sensor || !sensor->enabled)
+  if (!priv->enabled)
     {
       return;
     }
 
-  timestamp = clock_systime_ticks64();
-
   /* Acquire device lock */
-  ret = nxmutex_lock(&sensor->dev->dev_lock);
+
+  ret = nxmutex_lock(&priv->dev_lock);
   if (ret < 0)
     {
       goto reschedule;
     }
 
-  /* Read sensor data */
-  ret = your_device_read_data(sensor->dev, &data);
+  /* Read accelerometer data (6 bytes: X_L, X_H, Y_L, Y_H, Z_L, Z_H) */
+
+  ret = your_device_readregs(priv, YOUR_DEVICE_REG_OUT_X_L, buffer, 6);
   if (ret < 0)
     {
-      nxmutex_unlock(&sensor->dev->dev_lock);
+      snerr("Failed to read data: %d\n", ret);
+      nxmutex_unlock(&priv->dev_lock);
       goto reschedule;
     }
 
-  /* Update timestamp */
-  data.timestamp = timestamp;
+  /* Convert to sensor_accel structure
+   * Adjust scale factor based on your sensor's range and resolution
+   * Example: ±2g range, 16-bit resolution = 2*2*9.81/32768 = 0.000598 m/s²
+   */
 
-  /* Report sensor data to the upper half */
-  sensor->lower.push_data(sensor->lower, &data, sizeof(data));
+  data.timestamp = sensor_get_timestamp();
+  data.x = (int16_t)(buffer[0] | (buffer[1] << 8)) * 0.000598f;  /* m/s² */
+  data.y = (int16_t)(buffer[2] | (buffer[3] << 8)) * 0.000598f;
+  data.z = (int16_t)(buffer[4] | (buffer[5] << 8)) * 0.000598f;
+  data.temperature = NAN;  /* Set if temperature is available */
 
-  nxmutex_unlock(&sensor->dev->dev_lock);
+  /* Push data to upper half */
+
+  priv->lower.push_event(priv->lower.priv, &data, sizeof(data));
+
+  nxmutex_unlock(&priv->dev_lock);
 
 reschedule:
+
   /* Schedule next reading */
-  if (sensor->enabled)
+
+  if (priv->enabled)
     {
-      work_queue(HPWORK, &sensor->work, your_device_worker, sensor, 
-                 USEC2TICK(sensor->interval));
+      work_queue(HPWORK, &priv->work, your_device_worker, priv,
+                 USEC2TICK(priv->interval));
     }
 }
-#else
+
 /****************************************************************************
- * your_device_fetch
+ * Public Functions
  ****************************************************************************/
 
-static int your_device_fetch(FAR struct sensor_lowerhalf_s *lower,
-                            FAR struct file *filep,
-                            FAR char *buffer, size_t buflen)
+/****************************************************************************
+ * Name: your_device_register_uorb
+ *
+ * Description:
+ *   Register the sensor as uORB device, creates /dev/uorb/sensor_accelX
+ *
+ ****************************************************************************/
+
+int your_device_register_uorb(int devno, FAR struct i2c_master_s *i2c)
 {
-  FAR struct your_device_sensor_s *sensor = (FAR struct your_device_sensor_s *)lower;
-  struct sensor_accel data;
-  uint64_t timestamp;
+  FAR struct your_device_sensor_s *priv;
   int ret;
 
-  if (buflen < sizeof(struct sensor_accel))
+  /* Allocate device structure */
+
+  priv = kmm_zalloc(sizeof(struct your_device_sensor_s));
+  if (!priv)
     {
-      return -EOVERFLOW;
+      snerr("Failed to allocate memory\n");
+      return -ENOMEM;
     }
 
-  timestamp = clock_systime_ticks64();
+  /* Initialize device */
 
-  /* Acquire device lock */
-  ret = nxmutex_lock(&sensor->dev->dev_lock);
+  priv->i2c = i2c;
+  priv->addr = YOUR_DEVICE_ADDR;
+  priv->freq = YOUR_DEVICE_FREQ;
+  priv->enabled = false;
+  priv->interval = 1000000;  /* Default 1 second */
+
+  ret = your_device_init(priv);
   if (ret < 0)
     {
+      snerr("Failed to initialize device: %d\n", ret);
+      kmm_free(priv);
       return ret;
     }
+
+  /* Initialize sensor interface */
+
+  priv->lower.type = SENSOR_TYPE_ACCELEROMETER;
+  priv->lower.nbuffer = 1;
+  priv->lower.ops = &g_sensor_ops;
+
+  /* Register with sensor framework - creates /dev/uorb/sensor_accelX */
+
+  ret = sensor_register(&priv->lower, devno);
+  if (ret < 0)
+    {
+      snerr("Failed to register sensor: %d\n", ret);
+      nxmutex_destroy(&priv->dev_lock);
+      kmm_free(priv);
+      return ret;
+    }
+
+  sninfo("Sensor registered as sensor_accel%d\n", devno);
+  return OK;
+}
+
+#endif /* CONFIG_I2C && CONFIG_SENSORS_YOUR_DEVICE */
+```
+
+## Build System Files
+
+### 3. Make.defs Integration
+
+Add to `drivers/sensors/Make.defs`:
+
+```makefile
+# Your sensor driver
+ifeq ($(CONFIG_SENSORS_YOUR_DEVICE),y)
+  CSRCS += your_device_uorb.c
+endif
+```
+
+### 4. Kconfig Configuration
+
+Add to `drivers/sensors/Kconfig`:
+
+```kconfig
+config SENSORS_YOUR_DEVICE
+	bool "Your Sensor Device Driver"
+	depends on I2C
+	---help---
+		Enable uORB driver for your sensor device.
+
+if SENSORS_YOUR_DEVICE
+
+config YOUR_DEVICE_I2C_FREQUENCY
+	int "I2C frequency"
+	default 400000
+	---help---
+		I2C frequency for communication with sensor.
+
+endif # SENSORS_YOUR_DEVICE
+```
+
+## Usage Example
+
+### Application Code
+
+```c
+/****************************************************************************
+ * Example application using uORB sensor interface
+ ****************************************************************************/
+
+#include <fcntl.h>
+#include <poll.h>
+#include <sensor/accel.h>
+
+int main(int argc, char *argv[])
+{
+  struct sensor_accel data;
+  struct pollfd fds[1];
+  int fd;
+  int ret;
+
+  /* Subscribe to accelerometer (opens /dev/uorb/sensor_accel0) */
+
+  fd = orb_subscribe(ORB_ID(sensor_accel));
+  if (fd < 0)
+    {
+      printf("Failed to subscribe\n");
+      return -1;
+    }
+
+  /* Set sampling interval to 100Hz (10ms = 10000us) */
+
+  orb_set_interval(fd, 10000);
+
+  /* Setup poll */
+
+  fds[0].fd = fd;
+  fds[0].events = POLLIN;
 
   /* Read sensor data */
-  ret = your_device_read_data(sensor->dev, &data);
-  if (ret < 0)
+
+  while (1)
     {
-      nxmutex_unlock(&sensor->dev->dev_lock);
-      return ret;
+      ret = poll(fds, 1, 1000);
+      if (ret > 0 && (fds[0].revents & POLLIN))
+        {
+          orb_copy(ORB_ID(sensor_accel), fd, &data);
+          printf("Accel: x=%.3f y=%.3f z=%.3f m/s²\n",
+                 data.x, data.y, data.z);
+        }
     }
 
-  /* Update timestamp */
-  data.timestamp = timestamp;
-
-  /* Copy data to user buffer */
-  memcpy(buffer, &data, sizeof(struct sensor_accel));
-
-  nxmutex_unlock(&sensor->dev->dev_lock);
-  return sizeof(struct sensor_accel);
+  orb_unsubscribe(fd);
+  return 0;
 }
-#endif
+```
 
-/****************************************************************************
- * your_device_read_data
- ****************************************************************************/
+### Board Integration
 
-static int your_device_read_data(FAR struct your_device_dev_s *dev,
-                                FAR struct sensor_accel *data)
+Add to your board's initialization file (e.g., `boards/*/src/*_bringup.c`):
+
+```c
+#include <nuttx/sensors/your_device.h>
+
+int board_sensor_initialize(void)
 {
-  uint8_t buffer[6];
+  struct i2c_master_s *i2c;
   int ret;
 
-  if (!dev || !data)
+  /* Initialize I2C bus */
+
+  i2c = esp32s3_i2cbus_initialize(0);  /* Adjust for your platform */
+  if (!i2c)
     {
-      return -EINVAL;
+      return -ENODEV;
     }
 
-  /* Read accelerometer data registers */
-  ret = your_device_readregs(dev, YOUR_DEVICE_REG_DATA, buffer, 6);
+  /* Register sensor - creates /dev/uorb/sensor_accel0 */
+
+  ret = your_device_register_uorb(0, i2c);
   if (ret < 0)
     {
+      syslog(LOG_ERR, "Failed to register sensor: %d\n", ret);
       return ret;
     }
-
-  /* Parse data (adjust based on your sensor's protocol) */
-  data->x = ((int16_t)(buffer[0] | (buffer[1] << 8))) * ((FAR struct your_device_sensor_s *)lower)->scale;
-  data->y = ((int16_t)(buffer[2] | (buffer[3] << 8))) * ((FAR struct your_device_sensor_s *)lower)->scale;
-  data->z = ((int16_t)(buffer[4] | (buffer[5] << 8))) * ((FAR struct your_device_sensor_s *)lower)->scale;
-  data->temperature = 25.0f;  /* Add temperature reading if available */
-
-  sninfo("Accel data: x=%.3f, y=%.3f, z=%.3f\n", data->x, data->y, data->z);
 
   return OK;
 }
 ```
 
-## Build System Files
+## Key Concepts
 
-### 6. Make.defs Integration
+### Sensor Types
 
-Add the following to `drivers/sensors/Make.defs`:
+Use standard sensor types from `<nuttx/sensors/sensor.h>`:
 
-```makefile
-# Your sensor driver
-ifeq ($(CONFIG_SENSORS_YOUR_DEVICE),y)
-  CSRCS += your_device.c your_device_base.c
-  ifeq ($(CONFIG_SENSORS_YOUR_DEVICE_UORB),y)
-    CSRCS += your_device_uorb.c
-  endif
-endif
-```
+- `SENSOR_TYPE_ACCELEROMETER` → `/dev/uorb/sensor_accelX`
+- `SENSOR_TYPE_GYROSCOPE` → `/dev/uorb/sensor_gyroX`
+- `SENSOR_TYPE_MAGNETIC_FIELD` → `/dev/uorb/sensor_magX`
+- `SENSOR_TYPE_BAROMETER` → `/dev/uorb/sensor_baroX`
+- `SENSOR_TYPE_TEMPERATURE` → `/dev/uorb/sensor_tempX`
 
-### 7. Kconfig Configuration
+### Data Structures
 
-Add the following to `drivers/sensors/Kconfig`:
-
-```kconfig
-#
-# For a description of the syntax of this configuration file,
-# see the file kconfig-language.txt in the NuttX tools repository.
-#
-
-config SENSORS_YOUR_DEVICE
-	bool "Your Sensor Device Driver"
-	depends on CONFIG_I2C
-	---help---
-		Enable driver support for your sensor device.
-
-if SENSORS_YOUR_DEVICE
-
-config SENSORS_YOUR_DEVICE_UORB
-	bool "Your Device uORB Interface"
-	default n
-	---help---
-		Enable uORB-based sensor interface for your device.
-
-if SENSORS_YOUR_DEVICE_UORB
-
-config SENSORS_YOUR_DEVICE_POLL
-	bool "Enables polling sensor data"
-	default n
-	---help---
-		Enables polling of sensor data.
-
-config SENSORS_YOUR_DEVICE_POLL_INTERVAL
-	int "Polling interval in microseconds, default 1s"
-	depends on SENSORS_YOUR_DEVICE_POLL
-	default 1000000
-	range 0 4294967295
-	---help---
-		The interval until a new sensor measurement will be triggered.
-
-endif
-
-config YOUR_DEVICE_I2C_FREQUENCY
-	int "Your Device I2C frequency"
-	default 400000
-	---help---
-		I2C frequency used to communicate with your device.
-
-endif
-```
-
-## Usage Examples
-
-### Character Device Interface
+Use standard sensor data structures from `<nuttx/sensors/sensor.h>`:
 
 ```c
-/* Example usage of character device interface */
-#include <nuttx/sensors/your_device.h>
-#include <nuttx/i2c/i2c_master.h>
-
-int sensor_example(void)
+struct sensor_accel
 {
-  struct i2c_master_s *i2c;
-  char buffer[sizeof(struct your_device_data_s)];
-  int fd;
+  uint64_t timestamp;   /* Microseconds */
+  float x;              /* m/s² */
+  float y;              /* m/s² */
+  float z;              /* m/s² */
+  float temperature;    /* °C (or NAN if not available) */
+};
 
-  /* Initialize I2C bus */
-  i2c = esp32s3_i2cbus_initialize(0); /* ESP32 example - adjust for your platform */
-  if (!i2c)
-    {
-      printf("Failed to initialize I2C bus\n");
-      return -1;
-    }
+struct sensor_gyro
+{
+  uint64_t timestamp;   /* Microseconds */
+  float x;              /* rad/s */
+  float y;              /* rad/s */
+  float z;              /* rad/s */
+  float temperature;    /* °C (or NAN if not available) */
+};
 
-  /* Register your sensor device */
-  if (your_device_register("/dev/your_sensor0", i2c) < 0)
-    {
-      printf("Failed to register sensor device\n");
-      return -1;
-    }
+struct sensor_mag
+{
+  uint64_t timestamp;   /* Microseconds */
+  float x;              /* µT */
+  float y;              /* µT */
+  float z;              /* µT */
+  float temperature;    /* °C (or NAN if not available) */
+  int32_t status;       /* Calibration status */
+};
+```
 
-  /* Open device for reading */
-  fd = open("/dev/your_sensor0", O_RDONLY);
-  if (fd < 0)
-    {
-      printf("Failed to open sensor device\n");
-      return -1;
-    }
+### Data Acquisition Modes
 
-  /* Read sensor data */
-  while (1)
-    {
-      ssize_t n = read(fd, buffer, sizeof(buffer));
-      if (n == sizeof(buffer))
-        {
-          struct your_device_data_s *data = (struct your_device_data_s *)buffer;
-          printf("Sensor: x=%d, y=%d, z=%d\n", data->x, data->y, data->z);
-        }
-      
-      nxsig_usleep(100000); /* 100ms */
-    }
+**Polling Mode** (shown in example above):
+```c
+static void your_device_worker(FAR void *arg)
+{
+  /* Periodically read sensor data */
+  /* Push to upper half with push_event() */
+  /* Reschedule work */
+}
+```
+- Uses work queue to periodically read sensor
+- Suitable for most sensors
+- Adjustable interval via `set_interval()`
 
-  close(fd);
-  return 0;
+**Interrupt Mode**:
+```c
+static int your_device_interrupt(int irq, FAR void *context, FAR void *arg)
+{
+  FAR struct your_device_sensor_s *priv = arg;
+  
+  /* Schedule bottom half worker */
+  work_queue(HPWORK, &priv->work, your_device_worker, priv, 0);
+  return OK;
+}
+```
+- Triggered by hardware interrupt
+- Lower latency, more efficient
+- Configure interrupt pin during init
+
+**Fetch Mode** (on-demand):
+```c
+static int your_device_fetch(FAR struct sensor_lowerhalf_s *lower,
+                             FAR struct file *filep,
+                             FAR char *buffer, size_t buflen)
+{
+  /* Read data directly when user calls read() */
+  /* No internal buffering, no worker thread */
+  /* Return data immediately */
+}
+```
+- Use `.fetch` instead of `.activate` and `.set_interval`
+- Data read on-demand when application calls `read()`
+- No background polling
+
+### Multi-Sensor Devices
+
+For devices with multiple sensor types (e.g., IMU with accel + gyro):
+
+```c
+struct your_device_sensor_s
+{
+  struct sensor_lowerhalf_s accel_lower;  /* Accel interface */
+  struct sensor_lowerhalf_s gyro_lower;   /* Gyro interface */
+  /* ... shared I2C and config ... */
+};
+
+int your_device_register_uorb(int devno, FAR struct i2c_master_s *i2c)
+{
+  /* ... initialize device ... */
+  
+  /* Register accelerometer */
+  priv->accel_lower.type = SENSOR_TYPE_ACCELEROMETER;
+  sensor_register(&priv->accel_lower, devno);
+  
+  /* Register gyroscope */
+  priv->gyro_lower.type = SENSOR_TYPE_GYROSCOPE;
+  sensor_register(&priv->gyro_lower, devno);
 }
 ```
 
-### uORB Interface
+This creates:
+- `/dev/uorb/sensor_accel0`
+- `/dev/uorb/sensor_gyro0`
 
-```c
-/* Example usage of uORB interface */
-#include <uORB/uORB.h>
-#include <sensor/accel.h>  /* Standard accelerometer data structure */
-#include <poll.h>
+## Best Practices
 
-int uorb_sensor_example(void)
-{
-  struct sensor_accel data;
-  int sub_fd;
-  struct pollfd fds[1];
+1. **Thread Safety**: Always protect I2C access with mutex
+2. **Error Handling**: Check all I2C transaction return values
+3. **Memory**: Use `kmm_zalloc()` and check for NULL
+4. **Timestamps**: Use `sensor_get_timestamp()` for consistency
+5. **Units**: Follow SI units (m/s² for accel, rad/s for gyro, µT for mag)
+6. **Device ID**: Always verify device ID during initialization
+7. **Resource Cleanup**: Free allocated memory and destroy mutex on error paths
+8. **Scale Factors**: Calculate accurate conversion from raw ADC to physical units
+9. **NAN Values**: Use `NAN` for unavailable fields (e.g., temperature)
 
-  /* Subscribe to accelerometer data topic */
-  sub_fd = orb_subscribe_multi(ORB_ID(sensor_accel), 0);
-  if (sub_fd < 0)
-    {
-      printf("Failed to subscribe to accelerometer data\n");
-      return -1;
-    }
+## Testing
 
-  /* Setup poll for data availability */
-  fds[0].fd = sub_fd;
-  fds[0].events = POLLIN;
+Enable the listener tool to test your driver:
 
-  /* Wait for data updates */
-  while (1)
-    {
-      int ret = poll(fds, 1, 1000); /* 1 second timeout */
-      if (ret > 0 && (fds[0].revents & POLLIN))
-        {
-          /* Copy latest data */
-          orb_copy(ORB_ID(sensor_accel), sub_fd, &data);
-          printf("uORB Accel: x=%.3f, y=%.3f, z=%.3f, temp=%.1f\n",
-                 data.x, data.y, data.z, data.temperature);
-        }
-      
-      if (ret == 0)
-        {
-          printf("Timeout waiting for sensor data\n");
-        }
-    }
-
-  close(sub_fd);
-  return 0;
-}
+```bash
+NuttShell (NSH) NuttX-12.0.0
+nsh> uorb_listener sensor_accel0
+  timestamp: 123456789
+  x: 0.123
+  y: -0.456
+  z: 9.789
+  temperature: 25.3
 ```
 
-## Code Conventions
+Or use the sensor command:
 
-### Driver Development Best Practices
+```bash
+nsh> sensor accel0 10
+```
 
-1. **Include Structure**
-   - Always include `<nuttx/config.h>` first
-   - Group standard C headers, then NuttX-specific headers
-   - Use alphabetical order within groups
+This will print 10 samples from sensor_accel0.
 
-2. **Memory Management**
-   - Use `kmm_zalloc()` for driver structure allocation
-   - Always check for NULL pointers
-   - Free allocated memory in error paths
+## Common Sensor Types Reference
 
-3. **Thread Safety**
-   - Use semaphores for device access synchronization
-   - Protect critical sections in I2C operations
-   - Handle interruption by signals properly
+| Sensor Type | Device Path | Data Structure | Units |
+|------------|-------------|----------------|-------|
+| Accelerometer | `/dev/uorb/sensor_accelX` | `struct sensor_accel` | m/s² |
+| Gyroscope | `/dev/uorb/sensor_gyroX` | `struct sensor_gyro` | rad/s |
+| Magnetometer | `/dev/uorb/sensor_magX` | `struct sensor_mag` | µT |
+| Barometer | `/dev/uorb/sensor_baroX` | `struct sensor_baro` | hPa |
+| Temperature | `/dev/uorb/sensor_tempX` | `struct sensor_temp` | °C |
+| Light | `/dev/uorb/sensor_lightX` | `struct sensor_light` | lux |
+| Proximity | `/dev/uorb/sensor_proxX` | `struct sensor_prox` | cm |
+| Humidity | `/dev/uorb/sensor_humiX` | `struct sensor_humi` | % |
 
-4. **Error Handling**
-   - Always check return values of system calls
-   - Use appropriate error codes (-EINVAL, -ENOMEM, etc.)
-   - Log errors for debugging with appropriate levels
+## Real-World Example Reference
 
-5. **I2C Communication**
-   - Use `I2C_TRANSFER()` for multi-message transactions
-   - Handle device address and frequency properly
-   - Implement read-modify-write operations correctly
-
-6. **Data Handling**
-   - Convert raw sensor values to engineering units
-   - Include timestamps for time-sensitive data
-   - Validate data ranges and sanity check readings
-
-### Platform Integration
-
-1. **Board Configuration**
-   - Configure I2C buses in board-specific files
-   - Define pin assignments and peripheral configuration
-   - Include driver in system's configuration system
-
-2. **Board Initialization Pattern**
-   ```c
-   int board_your_device_initialize(int devno, int busno)
-   {
-     struct i2c_master_s *i2c;
-     
-     /* Initialize I2C bus */
-     i2c = stm32_i2cbus_initialize(busno); /* Adjust for your platform */
-     
-   #ifdef CONFIG_SENSORS_YOUR_DEVICE_UORB
-     return your_device_register_uorb(devno, i2c);
-   #else
-     char devpath[12];
-     snprintf(devpath, sizeof(devpath), "/dev/sensor%d", devno);
-     return your_device_register(devpath, i2c);
-   #endif
-   }
-   ```
-
-3. **Testing Strategy**
-   - Use character device interface for basic testing
-   - Test uORB publish/subscribe functionality
-   - Validate data conversion and sensor calibration
-   - Test error conditions and recovery scenarios
-
-This guide provides a comprehensive foundation for creating sensor drivers in NuttX, supporting both traditional character device interfaces and modern uORB message-based communication patterns.
+For a complete working example, see:
+- `nuttx/drivers/sensors/bmp180_uorb.c` - Simple barometer (polling mode)
+- `nuttx/drivers/sensors/bmi088_uorb.c` - Multi-sensor IMU (accel + gyro)
+- `nuttx/drivers/sensors/lsm9ds1_uorb.c` - 9-DOF IMU (accel + gyro + mag)
