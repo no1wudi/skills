@@ -747,6 +747,130 @@ static int your_device_fetch(FAR struct sensor_lowerhalf_s *lower,
 - Data read on-demand when application calls `read()`
 - No background polling
 
+### Sensor Operations Callbacks
+
+The `struct sensor_ops_s` defines 12 callback functions for different sensor operations:
+
+#### **Essential Callbacks (Required for Basic Functionality)**
+
+**`activate`** ✅ **REQUIRED**
+- Enable/disable sensor hardware (power management)
+- Start/stop data conversion and measurement
+- **Example**: Power on sensor, configure measurement mode
+- **Must implement**: This is the primary on/off control
+
+#### **Data Rate Control (Recommended)**
+
+**`set_interval`** ⚪ **OPTIONAL**
+- Set sensor output data rate (sampling period in microseconds)
+- Driver can adjust requested period to nearest supported value
+- **Best for**: Sensors with configurable data rates
+- **Example**: Set accelerometer to 100Hz (10000μs period)
+
+#### **Data Acquisition Mode Callbacks (Choose One Approach)**
+
+**`fetch`** ⚪ **OPTIONAL** (Alternative to polling)
+- Direct register read when application calls `read()`
+- No background polling, no worker thread
+- **Best for**: Low-ODR sensors, memory-constrained systems
+- **Use instead of**: `activate` + `set_interval` + worker
+
+**`batch`** ⚪ **OPTIONAL** (Advanced FIFO support)
+- Configure hardware FIFO for accumulating multiple samples
+- Reduces CPU load by batching data
+- **Best for**: High-ODR sensors with FIFO capability
+- **Requires**: Hardware FIFO support
+
+**`flush`** ⚪ **OPTIONAL** (Companion to batch)
+- Force immediate delivery of accumulated FIFO data
+- Asynchronous operation with completion notification
+- **Use with**: `batch` callback when FIFO management needed
+
+#### **Per-User Management (Advanced)**
+
+**`open`** ⚪ **OPTIONAL**
+- Initialize resources for each user of the sensor
+- Called every time device is opened
+- **Use when**: Sensor needs per-user setup or resource allocation
+
+**`close`** ⚪ **OPTIONAL**
+- Cleanup resources when user closes the device
+- Called every time device is closed
+- **Use with**: `open` callback for proper cleanup
+
+#### **Hardware Features (Sensor-Dependent)**
+
+**`selftest`** ⚪ **OPTIONAL**
+- Test sensor mechanical and electrical functionality
+- Compare output against expected min/max values
+- **Use when**: Sensor provides built-in self-test capability
+
+**`set_calibvalue`** ⚪ **OPTIONAL**
+- Write calibration data to persistent storage
+- Store factory or user calibration parameters
+- **Use when**: Sensor supports persistent calibration storage
+
+**`calibrate`** ⚪ **OPTIONAL**
+- Perform runtime calibration procedures
+- May return calibration results immediately
+- **Use when**: Sensor supports runtime calibration
+
+**`get_info`** ⚪ **OPTIONAL** (But Recommended)
+- Return device name, vendor, version, capabilities
+- **Should implement**: For device identification and debugging
+
+**`control`** ⚪ **OPTIONAL**
+- Handle device-specific ioctl commands
+- Custom modes, special configurations, reset operations
+- **Use when**: Sensor has unique features beyond standard operations
+
+#### **Implementation Strategy Guide**
+
+**Minimal Polling Implementation** (Most Common):
+```c
+static const struct sensor_ops_s g_sensor_ops = {
+  .activate = my_sensor_activate,      // ✅ REQUIRED
+  .set_interval = my_sensor_set_interval,  // ⚪ Optional but recommended
+};
+```
+
+**Fetch Mode Implementation** (Memory Efficient):
+```c
+static const struct sensor_ops_s g_sensor_ops = {
+  .fetch = my_sensor_fetch,  // ⚪ Use instead of activate+set_interval
+};
+```
+
+**Full-Featured Implementation** (All Capabilities):
+```c
+static const struct sensor_ops_s g_sensor_ops = {
+  .open = my_sensor_open,
+  .close = my_sensor_close,
+  .activate = my_sensor_activate,      // ✅ REQUIRED
+  .set_interval = my_sensor_set_interval,
+  .batch = my_sensor_batch,
+  .fetch = my_sensor_fetch,
+  .flush = my_sensor_flush,
+  .selftest = my_sensor_selftest,
+  .set_calibvalue = my_sensor_set_calibvalue,
+  .calibrate = my_sensor_calibrate,
+  .get_info = my_sensor_get_info,
+  .control = my_sensor_control,
+};
+```
+
+#### **Callback Selection Guide**
+
+| Sensor Type | Recommended Callbacks | Notes |
+|-------------|----------------------|-------|
+| Simple sensor | `activate` + `set_interval` | Standard polling mode |
+| Low-ODR sensor | `fetch` | Direct read, no polling |
+| High-ODR with FIFO | `activate` + `set_interval` + `batch` + `flush` | Hardware batching |
+| Multi-user sensor | `open` + `close` + `activate` | Per-user management |
+| Factory-calibrated | `get_info` + `selftest` | Verification only |
+| Field-calibratable | `calibrate` + `set_calibvalue` | Runtime calibration |
+| Custom features | `control` | Device-specific commands |
+
 ### Multi-Sensor Devices
 
 For devices with multiple sensor types (e.g., IMU with accel + gyro):
