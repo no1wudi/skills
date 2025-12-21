@@ -17,6 +17,7 @@ skills/
 │   │   └── gpio-expanders/
 │   │       └── esp32s3-lckfb-pca9557-gpio.md
 │   └── boards/
+│       ├── defconfig-generation.md
 │       ├── out-of-tree-board-creation.md
 │       └── out-of-tree-board-configs.md
 ├── wamr/
@@ -68,6 +69,8 @@ skills/{domain}/{category}/{subcategory}/{descriptive-name}.md
 - **[NuttX Out-of-Tree Board Creation Guide](nuttx/boards/out-of-tree-board-creation.md)** - Comprehensive guide for creating completely new custom NuttX boards from scratch, covering both board creation and configuration patterns with practical examples and code templates.
 
 - **[NuttX Out-of-Tree Configurations Guide](nuttx/boards/out-of-tree-board-configs.md)** - Complete guide for creating custom configurations for existing NuttX boards without modifying upstream code, including directory patterns, build system integration, and best practices.
+
+- **[NuttX Defconfig Generation Guide](nuttx/boards/defconfig-generation.md)** - How to generate normalized defconfig files using `make savedefconfig`, including best practices for maintaining clean, minimal configurations for out-of-tree boards.
 
 ### WAMR Domain
 
