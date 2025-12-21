@@ -26,6 +26,29 @@ skills/
 └── README.md
 ```
 
+## Naming Conventions
+
+All directories and files under `skills/` follow consistent naming rules:
+
+### Directory Names
+- Use **kebab-case** (lowercase letters with hyphens separating words)
+- First-level directory: domain name (e.g., `nuttx`, `wamr`)
+- Subdirectories: category or subcategory names (e.g., `applications`, `drivers`, `sensors`, `compilation`)
+
+### File Names
+- Use **kebab-case** with `.md` extension
+- Descriptive and self-explanatory (e.g., `creating-applications.md`, `out-of-tree-board-creation.md`)
+- Use action verbs when appropriate (e.g., `creating-`, `compiling-`)
+
+### Path Structure Pattern
+```
+skills/{domain}/{category}/{subcategory}/{descriptive-name}.md
+```
+- `{domain}`: Top-level category (e.g., `nuttx`, `wamr`)
+- `{category}`: Primary topic area (e.g., `applications`, `drivers`, `boards`, `compilation`)
+- `{subcategory}`: Optional nested category for grouping (e.g., `sensors`, `gpio-expanders`)
+- `{descriptive-name}.md`: Concise, hyphenated description of the guide's content
+
 ## Available Skills
 
 ### NuttX Domain
