@@ -2,29 +2,18 @@
 
 Skills are directories containing domain-specific knowledge and guides for performing particular tasks. Each skill is organized by directory path and uses markdown files to describe detailed instructions and usage patterns.
 
-The directory structure and file names indicate the specific domain and purpose of each skill, making it easy to locate relevant guidance for specialized tasks.
-
 ## Directory Structure
 
 ```
 skills/
 ├── nuttx/
 │   ├── applications/
-│   │   └── creating-applications.md
 │   ├── drivers/
 │   │   ├── sensors/
-│   │   │   └── creating-sensor-drivers.md
 │   │   └── gpio-expanders/
-│   │       └── esp32s3-lckfb-pca9557-gpio.md
 │   └── boards/
-│       ├── defconfig-generation.md
-│       ├── out-of-tree-board-creation.md
-│       └── out-of-tree-board-configs.md
-├── wamr/
-│   └── compilation/
-│       └── wamrc-aot-compilation.md
-├── LICENSE
-└── README.md
+└── wamr/
+    └── compilation/
 ```
 
 ## Naming Conventions
@@ -34,7 +23,7 @@ All directories and files under `skills/` follow consistent naming rules:
 ### Directory Names
 - Use **kebab-case** (lowercase letters with hyphens separating words)
 - First-level directory: domain name (e.g., `nuttx`, `wamr`)
-- Subdirectories: category or subcategory names (e.g., `applications`, `drivers`, `sensors`, `compilation`)
+- Subdirectories: category or subcategory names (e.g., `applications`, `drivers`, `sensors`)
 
 ### File Names
 - Use **kebab-case** with `.md` extension
@@ -50,30 +39,21 @@ skills/{domain}/{category}/{subcategory}/{descriptive-name}.md
 - `{subcategory}`: Optional nested category for grouping (e.g., `sensors`, `gpio-expanders`)
 - `{descriptive-name}.md`: Concise, hyphenated description of the guide's content
 
-## Available Skills
+## How to Pick a Proper Skill File
 
-### NuttX Domain
+To find the appropriate skill guide for your task:
 
-#### Applications
+1. **Identify the domain** - Determine which top-level domain your task belongs to (e.g., `nuttx` for RTOS-related tasks, `wamr` for WebAssembly-related tasks)
 
-- **[Creating NuttX Applications Guide](nuttx/applications/creating-applications.md)** - Comprehensive guide for creating NuttX applications including file templates, build system integration, and coding conventions.
+2. **Navigate the category hierarchy** - Browse through the domain subdirectories to find the relevant category:
+   - `applications/` - For creating and managing NuttX applications
+   - `drivers/` - For implementing hardware drivers (sensors, GPIO expanders, etc.)
+   - `boards/` - For board creation, configuration, and defconfig management
+   - `compilation/` - For compilation and optimization guides
 
-#### Drivers
+3. **Read the descriptive filename** - Each skill file has a self-explanatory name that clearly indicates its purpose. For example:
+   - `creating-sensor-drivers.md` - Guide for creating sensor drivers
+   - `wamrc-aot-compilation.md` - Guide for AOT compilation with wamrc
+   - `out-of-tree-board-creation.md` - Guide for creating custom boards
 
-- **[Creating NuttX Sensor Drivers Guide](nuttx/drivers/sensors/creating-sensor-drivers.md)** - Complete guide for creating sensor drivers in NuttX, covering both character device and uORB implementations with I2C communication patterns.
-
-- **[ESP32S3-LCKFB PCA9557 GPIO Expander Guide](nuttx/drivers/gpio-expanders/esp32s3-lckfb-pca9557-gpio.md)** - Complete usage patterns for the PCA9557 I2C GPIO expander on ESP32S3-LCKFB board, including GPIO control examples, pin mapping, and best practices for GPIO expander integration.
-
-#### Boards
-
-- **[NuttX Out-of-Tree Board Creation Guide](nuttx/boards/out-of-tree-board-creation.md)** - Comprehensive guide for creating completely new custom NuttX boards from scratch, covering both board creation and configuration patterns with practical examples and code templates.
-
-- **[NuttX Out-of-Tree Configurations Guide](nuttx/boards/out-of-tree-board-configs.md)** - Complete guide for creating custom configurations for existing NuttX boards without modifying upstream code, including directory patterns, build system integration, and best practices.
-
-- **[NuttX Defconfig Generation Guide](nuttx/boards/defconfig-generation.md)** - How to generate normalized defconfig files using `make savedefconfig`, including best practices for maintaining clean, minimal configurations for out-of-tree boards.
-
-### WAMR Domain
-
-#### Compilation
-
-- **[WAMR AOT Compilation Guide with wamrc](wamr/compilation/wamrc-aot-compilation.md)** - Complete guide for using wamrc to produce optimal AOT files for common CPU targets, including ARM and RISC-V architectures, with support for both XIP and non-XIP scenarios, featuring practical examples and optimization strategies.
+The hierarchical organization and descriptive naming make it straightforward to locate the right guide for your specific task.
