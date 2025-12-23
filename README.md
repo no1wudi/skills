@@ -6,6 +6,7 @@ Skills are directories containing domain-specific knowledge and guides for perfo
 
 ```
 skills/
+├── agents/
 ├── nuttx/
 │   ├── applications/
 │   ├── drivers/
@@ -43,15 +44,17 @@ skills/{domain}/{category}/{subcategory}/{descriptive-name}.md
 
 To find the appropriate skill guide for your task:
 
-1. **Identify the domain** - Determine which top-level domain your task belongs to (e.g., `nuttx` for RTOS-related tasks, `wamr` for WebAssembly-related tasks)
+1. **Identify the domain** - Determine which top-level domain your task belongs to (e.g., `nuttx` for RTOS-related tasks, `wamr` for WebAssembly-related tasks, `agents` for agent instruction files)
 
 2. **Navigate the category hierarchy** - Browse through the domain subdirectories to find the relevant category:
+   - `agents/` - For creating and managing AGENTS.md instruction files
    - `applications/` - For creating and managing NuttX applications
    - `drivers/` - For implementing hardware drivers (sensors, GPIO expanders, etc.)
    - `boards/` - For board creation, configuration, and defconfig management
    - `compilation/` - For compilation and optimization guides
 
 3. **Read the descriptive filename** - Each skill file has a self-explanatory name that clearly indicates its purpose. For example:
+   - `creating-agents-files.md` - Guide for creating AGENTS.md instruction files
    - `creating-sensor-drivers.md` - Guide for creating sensor drivers
    - `wamrc-aot-compilation.md` - Guide for AOT compilation with wamrc
    - `out-of-tree-board-creation.md` - Guide for creating custom boards
