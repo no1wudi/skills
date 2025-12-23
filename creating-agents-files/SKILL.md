@@ -1,3 +1,8 @@
+---
+name: creating-agents-files
+description: Create AGENTS.md files that provide effective agent instructions with project context, command patterns, and critical rules.
+---
+
 # Creating AGENTS.md Files
 
 This guide provides instructions for creating AGENTS.md files that provide effective agent instructions.
@@ -10,34 +15,7 @@ AGENTS.md files contain instructions for AI assistants working in specific domai
 
 A well-structured AGENTS.md file contains the following standard sections:
 
-### 1. Managed Block (Optional but Recommended)
-
-The file should begin with a managed block for OpenSpec integration if the domain uses OpenSpec:
-
-```markdown
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
-
-These instructions are for AI assistants working in this project.
-
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
-```
-
-**Purpose**: This block provides integration with OpenSpec, allowing agents to discover when to refer to change proposals. This is optional for domains that do not use OpenSpec.
-
-### 2. Domain Header
+### 1. Domain Header
 
 A clear heading that identifies the domain:
 
@@ -49,7 +27,7 @@ A clear heading that identifies the domain:
 - `# Agent Guidelines for NuttX Codebase`
 - `# Agent Guidelines for WAMR Applications`
 
-### 3. Project Overview
+### 1. Project Overview
 
 A brief introduction explaining what the project is and any critical constraints:
 
@@ -66,7 +44,7 @@ This is a <brief description>. All code changes must be built and tested by the 
 This is a NuttX embedded project. All code changes must be built and tested by the user manually - never attempt to run or test code automatically.
 ```
 
-### 4. Project Layout
+### 2. Project Layout
 
 A structured list of directories and their purposes:
 
@@ -92,7 +70,7 @@ A structured list of directories and their purposes:
 - `reference` - READ ONLY, reference materials and guides for specialized tasks
 ```
 
-### 5. Essential Commands
+### 3. Essential Commands
 
 Commands that agents will frequently use, organized by category:
 
@@ -143,7 +121,7 @@ When documenting commands:
 4. **Add notes for important exceptions or caveats**
 5. **Organize commands logically** (e.g., by function, by workflow)
 
-### 6. Critical Rules
+### 4. Critical Rules
 
 The most important rules that agents must follow:
 
@@ -341,25 +319,6 @@ Before finalizing an AGENTS.md file, verify:
 ### Minimal AGENTS.md Template
 
 ```markdown
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
-
-These instructions are for AI assistants working in this project.
-
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
-
 # Agent Guidelines for <Domain Name>
 
 ## Project Overview

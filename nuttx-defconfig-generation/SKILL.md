@@ -1,3 +1,8 @@
+---
+name: nuttx-defconfig-generation
+description: Generate normalized defconfig files for NuttX board configurations using savedefconfig to create clean, minimal configuration files.
+---
+
 # NuttX Defconfig Generation Guide
 
 This guide covers how to generate normalized defconfig files for NuttX board configurations. Using `savedefconfig` ensures clean, minimal configuration files that only contain settings that differ from defaults.
@@ -194,7 +199,7 @@ This allows out-of-tree configurations to use existing board support while maint
 
 ## Overview
 
-The NuttX build system provides the `make savedefconfig` command to generate minimal configuration files. This command creates a defconfig that contains only the options you've explicitly changed, making configuration files:
+The NuttX build system provides `make savedefconfig` command to generate minimal configuration files. This command creates a defconfig that contains only the options you've explicitly changed, making configuration files:
 
 - **Smaller and cleaner** - No unnecessary default values
 - **Easier to maintain** - Only track meaningful changes
@@ -395,34 +400,34 @@ Avoid:
 
 **Solution**:
 
-1. **Verify the path syntax**:
+1. **Verify** path syntax:
    ```bash
     # Correct: Path to config directory containing defconfig
     ./tools/configure.sh ../my-boards/my-board/configs/nsh
-   
+
    # Incorrect: Path to defconfig file itself
    ./tools/configure.sh ../my-boards/rv-virt/configs/nsh/defconfig  # WRONG!
    ```
 
-2. **Validate the path is correct**:
+2. **Validate** path is correct:
    ```bash
    # Check from nuttx directory
    ls ../path/to/your-board/configs/<config-name>/
    # Should show: defconfig
-   
+
    # Verify full path
    realpath ../path/to/your-board/configs/<config-name>/defconfig
    ```
 
-3. **Test path from nuttx directory**:
+3. **Test path** from nuttx directory:
    ```bash
    cd nuttx
    pwd                        # Should show: /path/to/nuttx
-   
+
    # Try listing the config directory
    ls -la ../boards/rv-virt/configs/nsh/
    # Should show: defconfig
-   
+
     # Then configure
     ./tools/configure.sh ../my-boards/my-board/configs/nsh
    ```
@@ -439,12 +444,12 @@ Avoid:
    cd nuttx
    # Show current directory
    pwd
-   
+
    # Show relative path to your config
    realpath --relative-to=. /path/to/your/config
    # OR
    realpath --relative-to=. ../../your/config
-   
+
    # Test if path exists
    test -d ../path/to/config && echo "Path exists" || echo "Path not found"
    ```
@@ -464,7 +469,7 @@ Avoid:
    cd nuttx
    # Get absolute path
    realpath ../path/to/your-board
-   
+
    # Use absolute path
    ./tools/configure.sh /full/path/to/your-board/configs/<config-name>
    ```
@@ -492,7 +497,7 @@ cp nuttx/defconfig ../my-custom-boards/my-board/configs/app/defconfig
 
 ### Referencing Out-of-Tree Boards
 
-When working with out-of-tree boards, use the path syntax:
+When working with out-of-tree boards, use path syntax:
 
 ```bash
 # Configure using out-of-tree board
@@ -511,7 +516,7 @@ cp nuttx/defconfig ../path/to/your-board/configs/<config-name>/defconfig
 
 ### Combining with Out-of-Tree Boards
 
-For completely custom boards, combine with the [Out-of-Tree Board Creation](out-of-tree-board-creation.md) guide:
+For completely custom boards, combine with the `nuttx-out-of-tree-board-creation` skill:
 
 1. Create board directory structure
 2. Add `scripts/Make.defs` referencing existing chip/board
@@ -519,6 +524,5 @@ For completely custom boards, combine with the [Out-of-Tree Board Creation](out-
 4. Test build and functionality
 
 ## Related Skills
-
-- [NuttX Out-of-Tree Board Creation](out-of-tree-board-creation.md) - Creating custom boards
-- [NuttX Out-of-Tree Configurations](out-of-tree-board-configs.md) - Managing custom configurations
+- Use the skill tool with `nuttx-out-of-tree-board-creation` for creating custom boards
+- Use the skill tool with `nuttx-out-of-tree-board-configs` for managing custom configurations

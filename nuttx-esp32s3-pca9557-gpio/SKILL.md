@@ -1,6 +1,11 @@
+---
+name: nuttx-esp32s3-pca9557-gpio
+description: Create PCA9557 GPIO expander driver for ESP32S3 with I2C communication, interrupt support, and pin control functionality.
+---
+
 # ESP32S3-LCKFB PCA9557 GPIO Expander Usage Guide
 
-This guide provides usage patterns for the PCA9557 I2C GPIO expander on the ESP32S3-LCKFB board in NuttX.
+This guide provides usage patterns for that PCA9557 I2C GPIO expander on ESP32S3-LCKFB board in NuttX.
 
 ## Hardware Configuration
 
@@ -10,7 +15,7 @@ This guide provides usage patterns for the PCA9557 I2C GPIO expander on the ESP3
 **Device Nodes**: `/dev/gpio0` through `/dev/gpio7` (8 pins total)
 **Current Usage**: Only pins 0-2 are actively used
 - IO0 → LCD_CS (LCD chip select)
-- IO1 → PA_EN (Power amplifier enable)  
+- IO1 → PA_EN (Power amplifier enable)
 - IO2 → DVP_PWDN (Digital video port power down)
 
 ## GPIO Usage Pattern
@@ -22,7 +27,7 @@ This guide provides usage patterns for the PCA9557 I2C GPIO expander on the ESP3
 #include <unistd.h>
 #include <nuttx/fs/fs.h>
 
-/* Define the GPIO device path */
+/* Define of GPIO device path */
 #define SZPI_MY_PIN_PATH "/dev/gpio3"  // IO3
 
 /* Example: Set GPIO pin HIGH */
@@ -31,20 +36,20 @@ int gpio_set_high(void)
   struct file f;
   int ret;
 
-  /* Open the GPIO device */
+  /* Open of GPIO device */
   ret = file_open(&f, SZPI_MY_PIN_PATH, O_RDWR);
   if (ret < 0)
     {
-      return ret;
-    }
+        return ret;
+      }
 
   /* Set pin HIGH ("1" = HIGH, "0" = LOW) */
-  ret = file_write(&f, "1", 1);
+  ret = file_write(&f, "1",1);
   if (ret < 0)
     {
-      file_close(&f);
-      return ret;
-    }
+        file_close(&f);
+        return ret;
+      }
 
   file_close(&f);
   return OK;
@@ -59,16 +64,16 @@ int gpio_set_low(void)
   ret = file_open(&f, SZPI_MY_PIN_PATH, O_RDWR);
   if (ret < 0)
     {
-      return ret;
-    }
+        return ret;
+      }
 
   /* Set pin LOW */
-  ret = file_write(&f, "0", 1);
+  ret = file_write(&f, "0",1);
   if (ret < 0)
     {
-      file_close(&f);
-      return ret;
-    }
+        file_close(&f);
+        return ret;
+      }
 
   file_close(&f);
   return OK;
@@ -88,21 +93,21 @@ int gpio_read_state(void)
   ret = file_open(&f, SZPI_MY_PIN_PATH, O_RDONLY);
   if (ret < 0)
     {
-      return ret;
-    }
+        return ret;
+      }
 
   /* Read current pin state */
   ret = file_read(&f, buffer, 1);
   if (ret < 0)
     {
-      file_close(&f);
-      return ret;
-    }
+        file_close(&f);
+        return ret;
+      }
 
   file_close(&f);
 
   /* buffer[0] contains '0' or '1' */
-  return (buffer[0] == '1') ? 1 : 0;
+  return (buffer[0] == '1') ?1 : 0;
 }
 ```
 
@@ -134,23 +139,23 @@ int gpio_read_state(void)
 int board_gpio_expander_init(void)
 {
   /* Configure unused pins as outputs with known states */
-  
+
   /* Set IO3-IO7 to LOW by default (prevent floating inputs) */
-  const char *unused_pins[] = {
-    "/dev/gpio3", "/dev/gpio4", "/dev/gpio5", 
+  of const char *unused_pins[] = {
+    "/dev/gpio3", "/dev/gpio4", "/dev/gpio5",
     "/dev/gpio6", "/dev/gpio7"
   };
-  
+
   for (int i = 0; i < 5; i++)
     {
-      struct file f;
-      if (file_open(&f, unused_pins[i], O_RDWR) == OK)
-        {
-          file_write(&f, "0", 1);  /* Set LOW */
-          file_close(&f);
-        }
-    }
-  
+        struct file f;
+        if (file_open(&f, unused_pins[i], O_RDWR) == OK)
+          {
+                file_write(&f, "0",1);  /* Set LOW */
+                file_close(&f);
+              }
+      }
+
   return OK;
 }
 ```

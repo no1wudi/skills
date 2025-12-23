@@ -1,3 +1,8 @@
+---
+name: nuttx-creating-applications
+description: Create NuttX applications following established conventions and best practices with proper file structure, build configuration, and code conventions.
+---
+
 # Creating NuttX Applications Guide
 
 This guide provides comprehensive instructions for creating applications for the NuttX RTOS, following established conventions and best practices.
@@ -93,7 +98,7 @@ int main(int argc, FAR char *argv[])
 ### 2. Makefile
 
 ```makefile
-############################################################################
+###########################################################################
 # path/to/your_app/Makefile
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -113,7 +118,7 @@ int main(int argc, FAR char *argv[])
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################
+###########################################################################
 
 include $(APPDIR)/Make.defs
 
@@ -134,7 +139,7 @@ include $(APPDIR)/Application.mk
 ### 3. Make.defs
 
 ```makefile
-############################################################################
+###########################################################################
 # path/to/your_app/Make.defs
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -154,7 +159,7 @@ include $(APPDIR)/Application.mk
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################
+###########################################################################
 
 ifneq ($(CONFIG_EXAMPLES_YOUR_APP),)
 CONFIGURED_APPS += $(APPDIR)/examples/your_app

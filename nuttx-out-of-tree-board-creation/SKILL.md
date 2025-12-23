@@ -1,13 +1,18 @@
+---
+name: nuttx-out-of-tree-board-creation
+description: Create custom out-of-tree board support packages for NuttX with proper directory structure, source files, and build integration.
+---
+
 # NuttX Out-of-Tree Board Creation Guide
 
-This guide covers how to create custom NuttX boards without modifying the upstream codebase. It provides architecture-independent patterns that work across all NuttX-supported architectures (ARM, RISC-V, xtensa, etc.).
+This guide covers how to create custom NuttX boards without modifying of upstream codebase. It provides architecture-independent patterns that work across all NuttX-supported architectures (ARM, RISC-V, xtensa, etc.).
 
 ## Board Creation Patterns
 
 ### Pattern 1: Out-of-Tree Board Creation
 Create a completely new board directory that leverages existing chip-level drivers without duplicating code.
 
-### Pattern 2: Out-of-Tree Configurations  
+### Pattern 2: Out-of-Tree Configurations
 Create custom configurations for existing boards without modifying upstream code.
 
 ## Directory Structure
@@ -107,7 +112,7 @@ CONFIG_ARCH_CHIP_<YOUR-CHIP>=y
 
 #### scripts/Make.defs (Architecture-Independent)
 ```makefile
-############################################################################
+###########################################################################
 # boards/my-custom-board/scripts/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -125,7 +130,7 @@ CONFIG_ARCH_CHIP_<YOUR-CHIP>=y
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################
+###########################################################################
 
 # Reference existing similar board's build system
 include $(TOPDIR)/boards/<arch>/<chip-family>/<reference-board>/scripts/Make.defs
@@ -133,7 +138,7 @@ include $(TOPDIR)/boards/<arch>/<chip-family>/<reference-board>/scripts/Make.def
 
 #### scripts/Make.defs (Out-of-Tree Configuration)
 ```makefile
-############################################################################
+###########################################################################
 # boards/my-config/scripts/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -151,7 +156,7 @@ include $(TOPDIR)/boards/<arch>/<chip-family>/<reference-board>/scripts/Make.def
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################
+###########################################################################
 
 # Point to the existing board being configured
 include $(TOPDIR)/boards/<arch>/<chip-family>/<reference-board>/scripts/Make.defs
@@ -161,7 +166,7 @@ include $(TOPDIR)/boards/<arch>/<chip-family>/<reference-board>/scripts/Make.def
 
 #### src/Make.defs (For custom board with unique initialization)
 ```makefile
-############################################################################
+###########################################################################
 # boards/my-custom-board/src/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -179,7 +184,7 @@ include $(TOPDIR)/boards/<arch>/<chip-family>/<reference-board>/scripts/Make.def
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################
+###########################################################################
 
 include $(TOPDIR)/Make.defs
 
@@ -208,7 +213,7 @@ CFLAGS += ${INCDIR_PREFIX}$(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.  The
+ * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
@@ -322,7 +327,7 @@ void board_initialize(void)
  *   This function is called once from board_app_init in the NuttX
  *   architecture-specific initialization sequence.
  *
- *   BOARD_APP_INITIALIZE is executed in the context of work queue
+ *   BOARD_APP_INITIALIZE is executed in the context of the work queue
  *   thread and is designed for configuration that requires
  *   interrupts enabled and driver/device initialization to complete.
  *
@@ -467,7 +472,7 @@ nuttx/boards/arm/imxrt/imxrt1060-evk/
 nuttx/boards/arm/stm32l4/stm32l476g-disco/
 ```
 
-### RISC-V Architecture  
+### RISC-V Architecture
 ```bash
 # Configuration
 CONFIG_ARCH="risc-v"
@@ -482,7 +487,7 @@ nuttx/boards/risc-v/k210/kendryte-k210/
 ### xtensa Architecture (ESP32, ESP32-S3, etc.)
 ```bash
 # Configuration
-CONFIG_ARCH="xtensa" 
+CONFIG_ARCH="xtensa"
 CONFIG_ARCH_CHIP="<your-xtensa-chip>"
 CONFIG_ARCH_CHIP_<CHIP_NAME>=y
 
@@ -508,7 +513,7 @@ nuttx/boards/mips/pic32mx/pic32mx-starter-kit/
 - `/home/huang/Work/nx/boards/lckfb-szpi-esp32s3/` - xtensa custom board
 - `/home/huang/Work/nx/boards/stm32f746g-disco/` - ARM custom board
 
-### Successful Out-of-Tree Configurations  
+### Successful Out-of-Tree Configurations
 - `/home/huang/Work/nx/boards/esp32s3/` - xtensa configurations
 - `/home/huang/Work/nx/boards/esp32/` - xtensa configurations
 - `/home/huang/Work/nx/boards/esp32c3/` - RISC-V configurations
@@ -564,7 +569,7 @@ openocd -f interface/ftdi.cfg -f target/<your-chip>.cfg -c "program build/nuttx.
 
 ### RISC-V-Specific Patterns
 ```c
-/* Configure RISC-V-specific peripherals */  
+/* Configure RISC-V-specific peripherals */
 #ifdef CONFIG_ARCH_RISCV
   /* Your RISC-V chip specific GPIO configuration */
   riscv_configgpio(BOARD_CUSTOM_PIN, RISCVGPIO_OUTPUT);
@@ -609,7 +614,7 @@ void board_specific_init(void)
 - Ensure `CONFIG_ARCH_CHIP` points to correct chip family
 - Check that required chip features are enabled for your architecture
 
-#### Build Issues  
+#### Build Issues
 - Verify `Make.defs` includes correct reference board for your architecture
 - Check for architecture-specific toolchain requirements
 - Ensure linker scripts are compatible with your architecture
@@ -626,4 +631,4 @@ void board_specific_init(void)
 - **Toolchain issues**: Use architecture-specific toolchains
 - **Memory layout**: Each architecture has different memory requirements
 
-This guide provides a foundation for creating custom NuttX boards across all supported architectures while maintaining compatibility with the upstream codebase.
+This guide provides a foundation for creating custom NuttX boards across all supported architectures while maintaining compatibility with upstream codebase.

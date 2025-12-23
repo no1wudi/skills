@@ -1,10 +1,15 @@
+---
+name: nuttx-creating-sensor-drivers
+description: Create uORB-based sensor drivers in NuttX with publish/subscribe pattern, character device creation, and standardized data structures.
+---
+
 # Writing NuttX Sensor Drivers Guide (uORB)
 
 This guide provides instructions for creating uORB-based sensor drivers in NuttX.
 
 ## Overview
 
-NuttX sensor drivers using the uORB (Micro Object Request Broker) framework provide:
+NuttX sensor drivers using uORB (Micro Object Request Broker) framework provide:
 - Publish/subscribe pattern for sensor data
 - Automatic character device creation at `/dev/uorb/sensor_XXX`
 - Ring buffer management and multi-subscriber support
@@ -83,7 +88,7 @@ extern "C"
  * Name: your_device_register_uorb
  *
  * Description:
- *   Register the sensor as uORB device, creates /dev/uorb/sensor_accelX
+ *   Register sensor as uORB device, creates /dev/uorb/sensor_accelX
  *
  * Input Parameters:
  *   devno   - Sensor device instance number (0 = sensor_accel0)
@@ -194,10 +199,10 @@ struct your_device_sensor_s
 static uint8_t your_device_getreg8(FAR struct your_device_sensor_s *priv,
                                    uint8_t regaddr);
 static void your_device_putreg8(FAR struct your_device_sensor_s *priv,
-                                uint8_t regaddr, uint8_t regval);
+                                 uint8_t regaddr, uint8_t regval);
 static int your_device_readregs(FAR struct your_device_sensor_s *priv,
-                                uint8_t regaddr, FAR uint8_t *buffer,
-                                uint8_t len);
+                                 uint8_t regaddr, FAR uint8_t *buffer,
+                                 uint8_t len);
 
 /* Device operations */
 
@@ -207,10 +212,10 @@ static int your_device_init(FAR struct your_device_sensor_s *priv);
 /* Sensor operations */
 
 static int your_device_activate(FAR struct sensor_lowerhalf_s *lower,
-                                FAR struct file *filep, bool enable);
+                                 FAR struct file *filep, bool enable);
 static int your_device_set_interval(FAR struct sensor_lowerhalf_s *lower,
-                                    FAR struct file *filep,
-                                    FAR uint32_t *period_us);
+                                     FAR struct file *filep,
+                                     FAR uint32_t *period_us);
 static void your_device_worker(FAR void *arg);
 
 /****************************************************************************
@@ -262,7 +267,7 @@ static uint8_t your_device_getreg8(FAR struct your_device_sensor_s *priv,
  ****************************************************************************/
 
 static void your_device_putreg8(FAR struct your_device_sensor_s *priv,
-                                uint8_t regaddr, uint8_t regval)
+                                 uint8_t regaddr, uint8_t regval)
 {
   struct i2c_msg_s msg;
   uint8_t data[2];
@@ -284,8 +289,8 @@ static void your_device_putreg8(FAR struct your_device_sensor_s *priv,
  ****************************************************************************/
 
 static int your_device_readregs(FAR struct your_device_sensor_s *priv,
-                                uint8_t regaddr, FAR uint8_t *buffer,
-                                uint8_t len)
+                                 uint8_t regaddr, FAR uint8_t *buffer,
+                                 uint8_t len)
 {
   struct i2c_msg_s msg[2];
 
@@ -358,7 +363,7 @@ static int your_device_init(FAR struct your_device_sensor_s *priv)
  ****************************************************************************/
 
 static int your_device_activate(FAR struct sensor_lowerhalf_s *lower,
-                                FAR struct file *filep, bool enable)
+                                 FAR struct file *filep, bool enable)
 {
   FAR struct your_device_sensor_s *priv =
     (FAR struct your_device_sensor_s *)lower;
@@ -386,8 +391,8 @@ static int your_device_activate(FAR struct sensor_lowerhalf_s *lower,
  ****************************************************************************/
 
 static int your_device_set_interval(FAR struct sensor_lowerhalf_s *lower,
-                                    FAR struct file *filep,
-                                    FAR uint32_t *period_us)
+                                     FAR struct file *filep,
+                                     FAR uint32_t *period_us)
 {
   FAR struct your_device_sensor_s *priv =
     (FAR struct your_device_sensor_s *)lower;
@@ -455,7 +460,7 @@ static void your_device_worker(FAR void *arg)
 
   nxmutex_unlock(&priv->dev_lock);
 
-reschedule:
+  reschedule:
 
   /* Schedule next reading */
 
@@ -474,7 +479,7 @@ reschedule:
  * Name: your_device_register_uorb
  *
  * Description:
- *   Register the sensor as uORB device, creates /dev/uorb/sensor_accelX
+ *   Register sensor as uORB device, creates /dev/uorb/sensor_accelX
  *
  ****************************************************************************/
 
@@ -592,9 +597,9 @@ int main(int argc, char *argv[])
   fd = orb_subscribe(ORB_ID(sensor_accel));
   if (fd < 0)
     {
-      printf("Failed to subscribe\n");
-      return -1;
-    }
+        printf("Failed to subscribe\n");
+        return -1;
+      }
 
   /* Set sampling interval to 100Hz (10ms = 10000us) */
 
@@ -609,14 +614,14 @@ int main(int argc, char *argv[])
 
   while (1)
     {
-      ret = poll(fds, 1, 1000);
-      if (ret > 0 && (fds[0].revents & POLLIN))
-        {
-          orb_copy(ORB_ID(sensor_accel), fd, &data);
-          printf("Accel: x=%.3f y=%.3f z=%.3f m/s²\n",
-                 data.x, data.y, data.z);
-        }
-    }
+        ret = poll(fds, 1, 1000);
+        if (ret > 0 && (fds[0].revents & POLLIN))
+          {
+                orb_copy(ORB_ID(sensor_accel), fd, &data);
+                printf("Accel: x=%.3f y=%.3f z=%.3f m/s²\n",
+                       data.x, data.y, data.z);
+              }
+      }
 
   orb_unsubscribe(fd);
   return 0;
@@ -640,17 +645,17 @@ int board_sensor_initialize(void)
   i2c = esp32s3_i2cbus_initialize(0);  /* Adjust for your platform */
   if (!i2c)
     {
-      return -ENODEV;
-    }
+        return -ENODEV;
+      }
 
   /* Register sensor - creates /dev/uorb/sensor_accel0 */
 
   ret = your_device_register_uorb(0, i2c);
   if (ret < 0)
     {
-      syslog(LOG_ERR, "Failed to register sensor: %d\n", ret);
-      return ret;
-    }
+        syslog(LOG_ERR, "Failed to register sensor: %d\n", ret);
+        return ret;
+      }
 
   return OK;
 }
@@ -722,7 +727,7 @@ static void your_device_worker(FAR void *arg)
 static int your_device_interrupt(int irq, FAR void *context, FAR void *arg)
 {
   FAR struct your_device_sensor_s *priv = arg;
-  
+
   /* Schedule bottom half worker */
   work_queue(HPWORK, &priv->work, your_device_worker, priv, 0);
   return OK;
@@ -794,7 +799,7 @@ The `struct sensor_ops_s` defines 12 callback functions for different sensor ope
 - **Use when**: Sensor needs per-user setup or resource allocation
 
 **`close`** ⚪ **OPTIONAL**
-- Cleanup resources when user closes the device
+- Cleanup resources when user closes device
 - Called every time device is closed
 - **Use with**: `open` callback for proper cleanup
 
@@ -886,11 +891,11 @@ struct your_device_sensor_s
 int your_device_register_uorb(int devno, FAR struct i2c_master_s *i2c)
 {
   /* ... initialize device ... */
-  
+
   /* Register accelerometer */
   priv->accel_lower.type = SENSOR_TYPE_ACCELEROMETER;
   sensor_register(&priv->accel_lower, devno);
-  
+
   /* Register gyroscope */
   priv->gyro_lower.type = SENSOR_TYPE_GYROSCOPE;
   sensor_register(&priv->gyro_lower, devno);
@@ -915,7 +920,7 @@ This creates:
 
 ## Testing
 
-Enable the listener tool to test your driver:
+Enable to listener tool to test your driver:
 
 ```bash
 NuttShell (NSH) NuttX-12.0.0
@@ -927,7 +932,7 @@ nsh> uorb_listener sensor_accel0
   temperature: 25.3
 ```
 
-Or use the sensor command:
+Or use to sensor command:
 
 ```bash
 nsh> sensor accel0 10

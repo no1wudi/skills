@@ -1,62 +1,79 @@
 # Skills
 
-Skills are directories containing domain-specific knowledge and guides for performing particular tasks. Each skill is organized by directory path and uses markdown files to describe detailed instructions and usage patterns.
+Skills are directories containing domain-specific knowledge and guides for performing particular tasks. Each skill is organized as a directory with a `SKILL.md` file containing YAML frontmatter for OpenCode skill discovery.
 
 ## Directory Structure
 
 ```
 skills/
-├── agents/
-├── nuttx/
-│   ├── applications/
-│   ├── drivers/
-│   │   ├── sensors/
-│   │   └── gpio-expanders/
-│   └── boards/
-└── wamr/
-    └── compilation/
+├── creating-agents-files/
+│   └── SKILL.md
+├── nuttx-creating-applications/
+│   └── SKILL.md
+├── nuttx-defconfig-generation/
+│   └── SKILL.md
+├── nuttx-out-of-tree-board-configs/
+│   └── SKILL.md
+├── nuttx-out-of-tree-board-creation/
+│   └── SKILL.md
+├── nuttx-esp32s3-pca9557-gpio/
+│   └── SKILL.md
+├── nuttx-creating-sensor-drivers/
+│   └── SKILL.md
+├── wamr-aot-compilation/
+│   └── SKILL.md
+└── README.md
 ```
 
 ## Naming Conventions
 
-All directories and files under `skills/` follow consistent naming rules:
+All skill directories under `skills/` follow consistent naming rules:
 
-### Directory Names
+### Skill Directory Names
 - Use **kebab-case** (lowercase letters with hyphens separating words)
-- First-level directory: domain name (e.g., `nuttx`, `wamr`)
-- Subdirectories: category or subcategory names (e.g., `applications`, `drivers`, `sensors`)
+- Include domain prefix for disambiguation (e.g., `nuttx-creating-applications`, `wamr-aot-compilation`)
+- 1-64 characters, no leading/trailing hyphens, no consecutive hyphens
 
-### File Names
-- Use **kebab-case** with `.md` extension
-- Descriptive and self-explanatory (e.g., `creating-applications.md`, `out-of-tree-board-creation.md`)
-- Use action verbs when appropriate (e.g., `creating-`, `compiling-`)
+### Skill File Names
+- Must be named `SKILL.md` (all caps)
+- Contains YAML frontmatter with `name` and `description` fields
+- All original markdown content preserved below frontmatter
 
 ### Path Structure Pattern
 ```
-skills/{domain}/{category}/{subcategory}/{descriptive-name}.md
+skills/{domain}-{descriptive-name}/SKILL.md
 ```
-- `{domain}`: Top-level category (e.g., `nuttx`, `wamr`)
-- `{category}`: Primary topic area (e.g., `applications`, `drivers`, `boards`, `compilation`)
-- `{subcategory}`: Optional nested category for grouping (e.g., `sensors`, `gpio-expanders`)
-- `{descriptive-name}.md`: Concise, hyphenated description of the guide's content
+- `{domain}`: Technology domain prefix (e.g., `nuttx`, `wamr`, or omitted for general skills)
+- `{descriptive-name}`: Hyphenated description of the skill's purpose
+- Example: `skills/nuttx-creating-sensor-drivers/SKILL.md`
 
 ## How to Pick a Proper Skill File
 
 To find the appropriate skill guide for your task:
 
-1. **Identify the domain** - Determine which top-level domain your task belongs to (e.g., `nuttx` for RTOS-related tasks, `wamr` for WebAssembly-related tasks, `agents` for agent instruction files)
+1. **Identify the domain** - Determine which domain your task belongs to by looking for domain prefixes:
+   - `nuttx-*` - For NuttX RTOS-related tasks (applications, boards, drivers)
+   - `wamr-*` - For WebAssembly Micro Runtime tasks
+   - No prefix - For general-purpose skills (e.g., `creating-agents-files`)
 
-2. **Navigate the category hierarchy** - Browse through the domain subdirectories to find the relevant category:
-   - `agents/` - For creating and managing AGENTS.md instruction files
-   - `applications/` - For creating and managing NuttX applications
-   - `drivers/` - For implementing hardware drivers (sensors, GPIO expanders, etc.)
-   - `boards/` - For board creation, configuration, and defconfig management
-   - `compilation/` - For compilation and optimization guides
+2. **Browse available skills** - List the skills directory to see all available skills:
+   ```bash
+   ls skills/
+   ```
 
-3. **Read the descriptive filename** - Each skill file has a self-explanatory name that clearly indicates its purpose. For example:
-   - `creating-agents-files.md` - Guide for creating AGENTS.md instruction files
-   - `creating-sensor-drivers.md` - Guide for creating sensor drivers
-   - `wamrc-aot-compilation.md` - Guide for AOT compilation with wamrc
-   - `out-of-tree-board-creation.md` - Guide for creating custom boards
+3. **Read skill descriptions** - Each skill's `SKILL.md` frontmatter includes a description:
+   ```yaml
+   ---
+   name: nuttx-creating-sensor-drivers
+   description: Create uORB-based sensor drivers in NuttX with publish/subscribe pattern, character device creation, and standardized data structures.
+   ---
+   ```
 
-The hierarchical organization and descriptive naming make it straightforward to locate the right guide for your specific task.
+4. **Use the skill tool** - Load skills dynamically using the skill tool:
+   ```bash
+   skill nuttx-creating-sensor-drivers
+   ```
+
+The domain-prefixed naming and descriptive skill names make it straightforward to locate the right guide for your specific task.
+
+

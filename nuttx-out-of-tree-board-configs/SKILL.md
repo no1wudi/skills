@@ -1,7 +1,12 @@
+---
+name: nuttx-out-of-tree-board-configs
+description: Manage out-of-tree board configurations for NuttX with proper directory structure, defconfig files, and build integration.
+---
+
 # NuttX Out-of-Tree Board Configurations
 
 ## Overview
-NuttX supports creating custom configurations for existing in-tree boards without modifying the upstream board code. This allows you to maintain custom configurations separately while leveraging all the existing board support code.
+NuttX supports creating custom configurations for existing in-tree boards without modifying of upstream board code. This allows you to maintain custom configurations separately while leveraging all of existing board support code.
 
 ## Directory Structure Pattern
 
@@ -40,19 +45,19 @@ mkdir -p boards/<board-name>/scripts
 ```
 
 ### 2. Configuration File (defconfig)
-Copy an existing configuration from the in-tree board or create a new one. The configuration should include:
+Copy an existing configuration from in-tree board or create a new one. The configuration should include:
 - Board identification (`CONFIG_ARCH_BOARD`, `CONFIG_ARCH_BOARD_STM32F746G_DISCO`)
 - Chip-specific settings (`CONFIG_ARCH_CHIP_STM32F746NG`)
 - System configuration (NSH, memory regions, etc.)
 
 ### 3. Build System Integration
-Create `scripts/Make.defs` that includes the in-tree board's build definitions:
+Create `scripts/Make.defs` that includes in-tree board's build definitions:
 
 ```makefile
 include $(TOPDIR)/boards/arm/<arch>/<board-name>/scripts/Make.defs
 ```
 
-This delegates all build logic to the existing in-tree board while allowing custom configurations.
+This delegates all build logic to existing in-tree board while allowing custom configurations.
 
 ### 4. Optional Simulation Support
 Add a `.resc` file for Renode simulation integration if needed.
