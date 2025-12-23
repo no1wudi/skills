@@ -22,7 +22,7 @@ make
 **Sibling directory (next to nuttx)**:
 ```bash
 cd nuttx
-./tools/configure.sh ../my-boards/rv-virt/configs/nsh
+./tools/configure.sh ../my-boards/stm32f7/my-board/configs/nsh
 ```
 
 **Parent directory levels**:
@@ -98,9 +98,9 @@ application/
 **rv-virt with different configs**:
 ```bash
 cd nuttx
-./tools/configure.sh ../boards/rv-virt/configs/nsh64        # 64-bit NSH
-./tools/configure.sh ../boards/rv-virt/configs/netnsh64    # Networking NSH
-./tools/configure.sh ../boards/rv-virt/configs/smp64       # SMP enabled
+./tools/configure.sh ../my-boards/rv-virt/configs/nsh64        # 64-bit NSH
+./tools/configure.sh ../my-boards/rv-virt/configs/netnsh64    # Networking NSH
+./tools/configure.sh ../my-boards/rv-virt/configs/smp64       # SMP enabled
 ```
 
 **Different architectures**:
@@ -116,8 +116,8 @@ cd nuttx
 **Start from existing config and save as new**:
 ```bash
 cd nuttx
-# Load existing configuration
-./tools/configure.sh ../boards/rv-virt/configs/nsh
+# Load existing configuration from out-of-tree board
+./tools/configure.sh ../my-boards/my-board/configs/nsh
 
 # Customize it
 make menuconfig
@@ -132,14 +132,14 @@ cp nuttx/defconfig ../my-boards/my-custom-configs/my-nsh/defconfig
 **Version-controlled custom configs**:
 ```bash
 cd nuttx
-./tools/configure.sh ../company-boards/nxp/imxrt/configs/freertos-demo
+./tools/configure.sh ../company-boards/nxp/imxrt/configs/custom-demo
 
 # Make changes
 make menuconfig
 
 # Save to version-controlled boards repo
 make savedefconfig
-cp nuttx/defconfig ../../company-boards/nxp/imxrt/configs/freertos-demo-v2/defconfig
+cp nuttx/defconfig ../company-boards/nxp/imxrt/configs/custom-demo-v2/defconfig
 ```
 
 #### Path Patterns Summary
@@ -164,7 +164,7 @@ cp nuttx/defconfig ../../company-boards/nxp/imxrt/configs/freertos-demo-v2/defco
 # No spaces in paths (or escape them)
 
 # Examples:
-./tools/configure.sh ../boards/rv-virt/configs/nsh
+./tools/configure.sh ../my-boards/rv-virt/configs/nsh
 ./tools/configure.sh /home/user/boards/stm32f7/disco/configs/nsh
 ./tools/configure.sh ../../shared-boards/esp32/devkit/configs/nsh
 ```
@@ -216,9 +216,12 @@ Benefits:
 ### Method 1: Generate Configuration from Scratch
 
 ```bash
-# Step 1: Start with a minimal configuration
+# Step 1: Start with a minimal configuration from an existing in-tree board
 cd nuttx
-./tools/configure.sh rv-virt:nsh
+./tools/configure.sh risc-v/qemu-rv:rv-virt/nsh
+
+# Or configure directly using your out-of-tree board:
+# ./tools/configure.sh ../my-boards/<your-board>/configs/<config-name>
 
 # Step 2: Configure for your custom board
 make menuconfig
@@ -394,8 +397,8 @@ Avoid:
 
 1. **Verify the path syntax**:
    ```bash
-   # Correct: Path to config directory containing defconfig
-   ./tools/configure.sh ../my-boards/rv-virt/configs/nsh
+    # Correct: Path to config directory containing defconfig
+    ./tools/configure.sh ../my-boards/my-board/configs/nsh
    
    # Incorrect: Path to defconfig file itself
    ./tools/configure.sh ../my-boards/rv-virt/configs/nsh/defconfig  # WRONG!
@@ -420,8 +423,8 @@ Avoid:
    ls -la ../boards/rv-virt/configs/nsh/
    # Should show: defconfig
    
-   # Then configure
-   ./tools/configure.sh ../boards/rv-virt/configs/nsh
+    # Then configure
+    ./tools/configure.sh ../my-boards/my-board/configs/nsh
    ```
 
 4. **Common path mistakes**:
@@ -473,9 +476,9 @@ Avoid:
 When creating configurations for existing in-tree boards:
 
 ```bash
-# Configure using in-tree board
+# Configure using in-tree board (use path syntax for consistency)
 cd nuttx
-./tools/configure.sh rv-virt:nsh
+./tools/configure.sh risc-v/qemu-rv:rv-virt/nsh
 
 # Modify as needed
 make menuconfig
