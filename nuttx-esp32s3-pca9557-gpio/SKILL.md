@@ -1,6 +1,6 @@
 ---
 name: nuttx-esp32s3-pca9557-gpio
-description: Create PCA9557 GPIO expander driver for ESP32S3 with I2C communication, interrupt support, and pin control functionality.
+description: Create PCA9557 GPIO expander driver for ESP32S3 with I2C communication, interrupt support, and pin control functionality. Use this specifically for ESP32S3-LCKFB boards using the PCA9557 I2C GPIO expander, when controlling external GPIO pins like LCD chip select, power amplifier enable, or custom peripheral control via I2C.
 ---
 
 # ESP32S3-LCKFB PCA9557 GPIO Expander Usage Guide

@@ -1,6 +1,6 @@
 ---
 name: nuttx-creating-applications
-description: Create NuttX applications following established conventions and best practices with proper file structure, build configuration, and code conventions.
+description: Create NuttX applications following established conventions and best practices with proper file structure, build configuration, and code conventions. Use this when developing new user applications, examples, or system utilities for NuttX, or when adding applications to the nuttx-apps repository.
 ---
 
 # Creating NuttX Applications Guide

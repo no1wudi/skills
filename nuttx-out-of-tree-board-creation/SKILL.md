@@ -1,6 +1,6 @@
 ---
 name: nuttx-out-of-tree-board-creation
-description: Create custom out-of-tree board support packages for NuttX with proper directory structure, source files, and build integration.
+description: Create custom out-of-tree board support packages for NuttX with proper directory structure, source files, and build integration. Use this when adding support for completely new hardware boards that don't exist in upstream NuttX, or when creating custom board BSP packages that leverage existing chip-level drivers while maintaining board-specific code separately.
 ---
 
 # NuttX Out-of-Tree Board Creation Guide

@@ -1,6 +1,6 @@
 ---
 name: wamr-aot-compilation
-description: Perform ahead-of-time (AOT) compilation of WebAssembly modules using wamrc for improved performance in WAMR runtime.
+description: Perform ahead-of-time (AOT) compilation of WebAssembly modules using wamrc for improved performance in WAMR runtime. Use this when compiling .wasm files to .aot format for deployment on embedded systems, optimizing WebAssembly for specific CPU architectures (ARM, RISC-V), or when targeting XIP (Execute In Place) scenarios to reduce RAM usage on resource-constrained devices.
 ---
 
 # WAMR AOT Compilation Guide with wamrc

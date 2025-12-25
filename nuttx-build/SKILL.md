@@ -1,11 +1,26 @@
 ---
 name: nuttx-build
-description: Configure and build NuttX RTOS for target board and config using CMake or Makefile.
+description: Configure and build NuttX RTOS for target board and config using CMake or Makefile. Use this when building NuttX firmware, configuring board-specific settings, switching between build systems, or performing incremental builds after code changes.
 ---
 
 # Building NuttX
 
 This guide provides instructions for building NuttX RTOS using either the traditional Makefile build system or the modern CMake build system.
+
+## Build Output Management
+
+**NuttX builds generate extensive output (1000+ lines)**. Throughout this guide, build commands use `tail -n 100` to limit output to the last 100 lines. This is a recommended starting point that balances:
+
+- Seeing enough context to identify errors
+- Avoiding overwhelming output
+
+**Adjust the tail value based on your needs**:
+- `tail -n 50` - Minimal output, good for clean builds
+- `tail -n 100` - Balanced (recommended default)
+- `tail -n 200` - More context for debugging
+- `tail -n 1000` - Comprehensive for troubleshooting
+
+To see full output, simply remove the `| tail -n N` portion.
 
 ## Build System Selection
 
@@ -80,13 +95,7 @@ cd path/to/nuttx
 ./tools/configure.sh rv-virt:nsh
 ```
 
-This command:
-- Cleans previous build artifacts (if configured for different board)
-- Copies the board's default configuration to `.config`
-- Sets up the Make.defs symlink
-- Generates header files and makefiles
-
-**Note**: You must be in the `path/to/nuttx` directory when running `configure.sh`.
+Configures the board by copying the default configuration, setting up makefiles, and generating header files.
 
 #### Using Different Configurations
 
@@ -139,10 +148,10 @@ kconfig-tweak --file .config --enable CONFIG_EXAMPLES_HELLO
 make olddefconfig
 
 # Build
-make -j8
+make -j8 2>&1 | tail -n 100
 
 # Incremental builds (after initial build)
-make -j$(nproc)
+make -j$(nproc) 2>&1 | tail -n 100
 ```
 
 ### Clean and Rebuild (Makefile)
@@ -153,34 +162,34 @@ cd path/to/nuttx
 # Full clean (cleans both kernel and apps)
 make distclean
 ./tools/configure.sh rv-virt:nsh
-make -j8
+make -j8 2>&1 | tail -n 100
 
 # Clean specific targets
 make clean
-make
+make 2>&1 | tail -n 100
 ```
 
 ### Advanced Options (Makefile)
 
 ```bash
 # Specify apps directory
-make APPDIR=path/to/nuttx-apps
+make APPDIR=path/to/nuttx-apps 2>&1 | tail -n 100
 # Or
 export NUTTX_APPS=path/to/nuttx-apps
-make
+make 2>&1 | tail -n 100
 
 # Debug build
 kconfig-tweak --file .config --enable CONFIG_DEBUG_SYMBOLS
 make olddefconfig
-make -j8
+make -j8 2>&1 | tail -n 100
 
 # Verbose build
-make V=1
+make V=1 2>&1 | tail -n 100
 
 # Build specific targets
-make kernel
-make apps
-make apps/<directory>/<app_name>
+make kernel 2>&1 | tail -n 100
+make apps 2>&1 | tail -n 100
+make apps/<directory>/<app_name> 2>&1 | tail -n 100
 ```
 
 ## CMake Build System
@@ -218,10 +227,10 @@ kconfig-tweak --file path/to/build/.config --enable CONFIG_EXAMPLES_HELLO
 cmake -B path/to/build path/to/nuttx
 
 # Build
-ninja -C path/to/build -j8
+ninja -C path/to/build -j8 2>&1 | tail -n 100
 
 # Incremental builds
-ninja -C path/to/build
+ninja -C path/to/build 2>&1 | tail -n 100
 ```
 
 ### Clean and Rebuild (CMake)
@@ -230,7 +239,7 @@ ninja -C path/to/build
 # Full clean
 rm -rf path/to/build
 cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B path/to/build path/to/nuttx
-ninja -C path/to/build
+ninja -C path/to/build 2>&1 | tail -n 100
 
 # Clean and reconfigure
 ninja -C path/to/build clean
@@ -246,7 +255,7 @@ cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -DNUTTX_APPS_DIR=path/to/nuttx-apps pat
 # Debug build
 kconfig-tweak --file path/to/build/.config --enable CONFIG_DEBUG_SYMBOLS
 cmake -B path/to/build path/to/nuttx
-ninja -C path/to/build
+ninja -C path/to/build 2>&1 | tail -n 100
 
 # Using CMake build target clean
 cmake --build path/to/build --target clean
@@ -336,7 +345,7 @@ cd path/to/nuttx
 ./tools/configure.sh rv-virt:nsh
 kconfig-tweak --file .config --enable CONFIG_EXAMPLES_HELLO
 make olddefconfig
-make -j8
+make -j8 2>&1 | tail -n 100
 ls -lh path/to/nuttx
 ```
 
@@ -346,6 +355,6 @@ ls -lh path/to/nuttx
 cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B path/to/build path/to/nuttx
 kconfig-tweak --file path/to/build/.config --enable CONFIG_EXAMPLES_HELLO
 cmake -B path/to/build path/to/nuttx
-ninja -C path/to/build -j8
+ninja -C path/to/build -j8 2>&1 | tail -n 100
 ls -lh path/to/build/nuttx
 ```

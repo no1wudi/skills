@@ -1,6 +1,6 @@
 ---
 name: nuttx-defconfig-generation
-description: Generate normalized defconfig files for NuttX board configurations using savedefconfig to create clean, minimal configuration files.
+description: Generate normalized defconfig files for NuttX board configurations using savedefconfig to create clean, minimal configuration files. Use this when creating new board configurations, maintaining custom defconfig files, or after making configuration changes with menuconfig to ensure minimal, portable configuration files.
 ---
 
 # NuttX Defconfig Generation Guide
