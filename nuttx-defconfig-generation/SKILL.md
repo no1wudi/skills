@@ -522,7 +522,3 @@ For completely custom boards, combine with the `nuttx-out-of-tree-board-creation
 2. Add `scripts/Make.defs` referencing existing chip/board
 3. Generate and save minimal defconfig
 4. Test build and functionality
-
-## Related Skills
-- Use the skill tool with `nuttx-out-of-tree-board-creation` for creating custom boards
-- Use the skill tool with `nuttx-out-of-tree-board-configs` for managing custom configurations

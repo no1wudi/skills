@@ -166,9 +166,3 @@ int board_gpio_expander_init(void)
 - **Permission denied**: Check file permissions on `/dev/gpio*` nodes
 - **No response**: Ensure I2C bus is properly initialized
 - **Incorrect state**: Verify pin is configured as output
-
-## Related Documentation
-
-- NuttX GPIO subsystem documentation
-- I2C bus configuration guides
-- Board-specific pinmux configurations
