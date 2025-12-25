@@ -169,29 +169,6 @@ make clean
 make 2>&1 | tail -n 100
 ```
 
-### Advanced Options (Makefile)
-
-```bash
-# Specify apps directory
-make APPDIR=path/to/nuttx-apps 2>&1 | tail -n 100
-# Or
-export NUTTX_APPS=path/to/nuttx-apps
-make 2>&1 | tail -n 100
-
-# Debug build
-kconfig-tweak --file .config --enable CONFIG_DEBUG_SYMBOLS
-make olddefconfig
-make -j8 2>&1 | tail -n 100
-
-# Verbose build
-make V=1 2>&1 | tail -n 100
-
-# Build specific targets
-make kernel 2>&1 | tail -n 100
-make apps 2>&1 | tail -n 100
-make apps/<directory>/<app_name> 2>&1 | tail -n 100
-```
-
 ## CMake Build System
 
 ### Configuration Commands
@@ -244,21 +221,6 @@ ninja -C path/to/build 2>&1 | tail -n 100
 # Clean and reconfigure
 ninja -C path/to/build clean
 cmake -B path/to/build path/to/nuttx
-```
-
-### Advanced Options (CMake)
-
-```bash
-# Specify apps directory
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -DNUTTX_APPS_DIR=path/to/nuttx-apps path/to/nuttx
-
-# Debug build
-kconfig-tweak --file path/to/build/.config --enable CONFIG_DEBUG_SYMBOLS
-cmake -B path/to/build path/to/nuttx
-ninja -C path/to/build 2>&1 | tail -n 100
-
-# Using CMake build target clean
-cmake --build path/to/build --target clean
 ```
 
 ## Configuration Management (Both Systems)
