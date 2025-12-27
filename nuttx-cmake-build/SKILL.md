@@ -1,6 +1,6 @@
 ---
 name: nuttx-cmake-build
-description: Build NuttX RTOS firmware using the modern CMake build system with Ninja backend. Use this when you want faster builds, better dependency tracking, multiple build configurations in parallel, out-of-tree builds, or modern development workflows.
+description: Use when building NuttX firmware with CMake for faster compilation, managing multiple build configurations simultaneously, or setting up out-of-tree build directories to keep source code clean.
 ---
 
 # NuttX CMake Build Workflows

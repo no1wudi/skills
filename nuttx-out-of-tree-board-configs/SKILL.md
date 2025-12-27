@@ -1,6 +1,6 @@
 ---
 name: nuttx-out-of-tree-board-configs
-description: Manage out-of-tree board configurations for NuttX with proper directory structure, defconfig files, and build integration. Use this when creating custom configurations for existing in-tree boards without modifying upstream NuttX code, or when maintaining separate product-specific or development configurations.
+description: Use when creating custom configurations for existing in-tree boards without modifying upstream NuttX code, or when maintaining separate product-specific or development configurations in out-of-tree directories.
 ---
 
 # NuttX Out-of-Tree Board Configurations

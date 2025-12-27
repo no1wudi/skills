@@ -1,6 +1,6 @@
 ---
 name: creating-agents-files
-description: Create AGENTS.md files that provide effective agent instructions with project context, command patterns, and critical rules. Use this when creating or updating agent guidance documents, defining project-specific workflows, or establishing domain-specific AI behavior patterns.
+description: Use when establishing project-specific guidelines for AI assistants, defining command patterns, documenting critical rules, or creating documentation to ensure consistent agent behavior across a codebase.
 ---
 
 # Creating AGENTS.md Files

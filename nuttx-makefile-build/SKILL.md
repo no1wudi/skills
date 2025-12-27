@@ -1,6 +1,6 @@
 ---
 name: nuttx-makefile-build
-description: Build NuttX RTOS firmware using the traditional Makefile build system. Use this when building for maximum board compatibility, working with custom build systems (like ESP32S3), or maintaining legacy projects.
+description: Use when building NuttX firmware with the traditional Makefile system for maximum board compatibility, working with boards like ESP32S3 that require custom build systems, or maintaining legacy projects.
 ---
 
 # NuttX Makefile Build Workflows
