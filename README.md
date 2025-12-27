@@ -8,20 +8,17 @@ Skills are directories containing domain-specific knowledge and guides for perfo
 skills/
 ├── creating-agents-files/
 │   └── SKILL.md
+├── nuttx-cmake-build/
+│   └── SKILL.md
+├── nuttx-config-management/
+│   └── SKILL.md
+├── nuttx-makefile-build/
+│   └── SKILL.md
 ├── nuttx-creating-applications/
-│   └── SKILL.md
-├── nuttx-defconfig-generation/
-│   └── SKILL.md
-├── nuttx-out-of-tree-board-configs/
-│   └── SKILL.md
-├── nuttx-out-of-tree-board-creation/
-│   └── SKILL.md
-├── nuttx-esp32s3-pca9557-gpio/
-│   └── SKILL.md
-├── nuttx-creating-sensor-drivers/
 │   └── SKILL.md
 ├── wamr-aot-compilation/
 │   └── SKILL.md
+├── ...
 └── README.md
 ```
 
