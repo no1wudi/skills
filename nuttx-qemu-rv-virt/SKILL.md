@@ -25,54 +25,51 @@ cmake --build build -j32 2>&1 | tail -n 100
 
 **Critical: QEMU must be restarted to load newly built ELF files.** Unlike hardware boards that can be flashed while running, QEMU does not support live reload.
 
+**Use tmux for session management to enable output capture and session reuse.**
+
 ```bash
-# Run QEMU with RV32 (uses build/nuttx)
-qemu-system-riscv32 \
+# Create background tmux session for QEMU with RV32 (uses build/nuttx)
+tmux new-session -d -s qemu 'qemu-system-riscv32 \
   -semihosting \
   -M virt,aclint=on \
   -cpu rv32 \
   -bios none \
   -kernel build/nuttx \
-  -nographic
+  -nographic'
 
-# Run QEMU with RV64 (uses nuttx/nuttx)
-qemu-system-riscv64 \
+# Create background tmux session for QEMU with RV64 (uses nuttx/nuttx)
+tmux new-session -d -s qemu 'qemu-system-riscv64 \
   -semihosting \
   -M virt,aclint=on \
   -cpu rv64 \
   -bios none \
   -kernel nuttx/nuttx \
-  -nographic
+  -nographic'
 ```
 
-## 3. Reload New Build
-
-Since QEMU does not support live reload, follow this workflow:
+## 3. Access NSH Console
 
 ```bash
-# Step 1: Kill the running QEMU process
-# Press Ctrl+A, then X to exit QEMU, or find and kill the process
-pkill -f qemu-system-riscv
+# View serial output (capture last 100 lines)
+tmux capture-pane -p -t qemu | tail -n 100
 
-# Step 2: Rebuild firmware
-cmake --build build -j32 2>&1 | tail -n 100
+# View more lines
+tmux capture-pane -p -t qemu | tail -n 500
 
-# Step 3: Restart QEMU with the new ELF
-qemu-system-riscv32 \
-  -semihosting \
-  -M virt,aclint=on \
-  -cpu rv32 \
-  -bios none \
-  -kernel build/nuttx \
-  -nographic
-```
+# Send commands to NSH shell
+tmux send-keys -t qemu Enter
+tmux send-keys -t qemu 'ps' Enter
+tmux send-keys -t qemu 'ls /dev' Enter
+tmux send-keys -t qemu 'free' Enter
+tmux send-keys -t qemu 'uname -a' Enter
 
-## 4. Access NSH Console
+# Send special keys
+tmux send-keys -t qemu C-c   # Ctrl+C (interrupt)
 
-QEMU runs NSH directly in the terminal when started with `-nographic`.
+# List all tmux sessions
+tmux list-sessions
 
-```bash
-# Common NSH commands (run in QEMU console)
+# Common NSH commands
 help                    # Show available commands
 ps                      # List running tasks
 free                    # Show memory usage
@@ -80,17 +77,40 @@ ls /dev                 # List device nodes
 uname -a                # Show system information
 ```
 
+## 4. Reload New Build
+
+Since QEMU does not support live reload, follow this workflow:
+
+```bash
+# Step 1: Kill the running QEMU session
+tmux kill-session -t qemu
+
+# Step 2: Rebuild firmware
+cmake --build build -j32 2>&1 | tail -n 100
+
+# Step 3: Restart QEMU with the new ELF
+tmux new-session -d -s qemu 'qemu-system-riscv32 \
+  -semihosting \
+  -M virt,aclint=on \
+  -cpu rv32 \
+  -bios none \
+  -kernel build/nuttx \
+  -nographic'
+```
+
 ## 5. Exit QEMU
 
 ```bash
-# Press Ctrl+A followed by X to exit QEMU
-# Or send Ctrl+C to interrupt and then Ctrl+A, X
+# Kill QEMU tmux session when done
+tmux kill-session -t qemu
+
+# Or if attached to the session, press Ctrl+A then X to exit
 ```
 
 ## Critical Rules
 
 1. **Always restart QEMU after rebuilding** - QEMU does not support live reload
-2. Kill existing QEMU process before rebuilding to avoid port conflicts
-3. Use `-nographic` for terminal-based NSH access
-4. Save important output before exiting QEMU (no persistent serial capture)
+2. Reuse the qemu session if it already exists (check with `tmux list-sessions`)
+3. The qemu tmux session only needs to create once
+4. Always send Enter to flush error input on qemu session create
 5. For rv32 builds, output is at `build/nuttx`; for rv64, it's at `nuttx/nuttx`
