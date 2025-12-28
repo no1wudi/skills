@@ -21,33 +21,40 @@ cmake -S nuttx -B build -DBOARD_CONFIG=rv-virt:nsh
 cmake --build build -j32 2>&1 | tail -n 100
 ```
 
-## 2. Run QEMU
+## 2. Determine Build Architecture (32-bit vs 64-bit)
+
+```bash
+# Check if built firmware is RV32 or RV64
+file path/to/nuttx
+```
+
+## 3. Run QEMU
 
 **Critical: QEMU must be restarted to load newly built ELF files.** Unlike hardware boards that can be flashed while running, QEMU does not support live reload.
 
 **Use tmux for session management to enable output capture and session reuse.**
 
 ```bash
-# Create background tmux session for QEMU with RV32 (uses build/nuttx)
+# Create background tmux session for QEMU with RV32
 tmux new-session -d -s qemu 'qemu-system-riscv32 \
   -semihosting \
   -M virt,aclint=on \
   -cpu rv32 \
   -bios none \
-  -kernel build/nuttx \
+  -kernel path/to/nuttx \
   -nographic'
 
-# Create background tmux session for QEMU with RV64 (uses nuttx/nuttx)
+# Create background tmux session for QEMU with RV64
 tmux new-session -d -s qemu 'qemu-system-riscv64 \
   -semihosting \
   -M virt,aclint=on \
   -cpu rv64 \
   -bios none \
-  -kernel nuttx/nuttx \
+  -kernel path/to/nuttx \
   -nographic'
 ```
 
-## 3. Access NSH Console
+## 4. Access NSH Console
 
 ```bash
 # View serial output (capture last 100 lines)
@@ -77,7 +84,7 @@ ls /dev                 # List device nodes
 uname -a                # Show system information
 ```
 
-## 4. Reload New Build
+## 5. Reload New Build
 
 Since QEMU does not support live reload, follow this workflow:
 
@@ -94,23 +101,17 @@ tmux new-session -d -s qemu 'qemu-system-riscv32 \
   -M virt,aclint=on \
   -cpu rv32 \
   -bios none \
-  -kernel build/nuttx \
+  -kernel path/to/nuttx \
   -nographic'
 ```
 
-## 5. Exit QEMU
+## 6. Exit QEMU
 
 ```bash
 # Kill QEMU tmux session when done
 tmux kill-session -t qemu
-
-# Or if attached to the session, press Ctrl+A then X to exit
 ```
 
 ## Critical Rules
 
 1. **Always restart QEMU after rebuilding** - QEMU does not support live reload
-2. Reuse the qemu session if it already exists (check with `tmux list-sessions`)
-3. The qemu tmux session only needs to create once
-4. Always send Enter to flush error input on qemu session create
-5. For rv32 builds, output is at `build/nuttx`; for rv64, it's at `nuttx/nuttx`
