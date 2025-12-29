@@ -1,5 +1,5 @@
 ---
-name: creating-agents-files
+name: general-creating-agents-files
 description: Use when establishing project-specific guidelines for AI assistants, defining command patterns, documenting critical rules, or creating documentation to ensure consistent agent behavior across a codebase.
 ---
 

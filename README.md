@@ -6,7 +6,9 @@ Skills are directories containing domain-specific knowledge and guides for perfo
 
 ```
 skills/
-├── creating-agents-files/
+├── general-creating-agents-files/
+│   └── SKILL.md
+├── general-creating-skills/
 │   └── SKILL.md
 ├── nuttx-cmake-build/
 │   └── SKILL.md
@@ -40,7 +42,7 @@ All skill directories under `skills/` follow consistent naming rules:
 ```
 skills/{domain}-{descriptive-name}/SKILL.md
 ```
-- `{domain}`: Technology domain prefix (e.g., `nuttx`, `wamr`, or omitted for general skills)
+- `{domain}`: Technology domain prefix (e.g., `nuttx`, `wamr`, or `general` for general-purpose skills)
 - `{descriptive-name}`: Hyphenated description of the skill's purpose
 - Example: `skills/nuttx-creating-sensor-drivers/SKILL.md`
 
@@ -51,7 +53,8 @@ To find the appropriate skill guide for your task:
 1. **Identify the domain** - Determine which domain your task belongs to by looking for domain prefixes:
    - `nuttx-*` - For NuttX RTOS-related tasks (applications, boards, drivers)
    - `wamr-*` - For WebAssembly Micro Runtime tasks
-   - No prefix - For general-purpose skills (e.g., `creating-agents-files`)
+   - `general-` - For general-purpose skills (e.g., `general-creating-skills`)
+- No prefix - (not used)
 
 2. **Browse available skills** - List the skills directory to see all available skills:
    ```bash
