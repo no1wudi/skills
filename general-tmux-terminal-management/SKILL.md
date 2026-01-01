@@ -1,6 +1,6 @@
 ---
 name: general-tmux-terminal-management
-description: Use when running interactive commands that require persistent sessions, or when starting background processes that need to be monitored or managed separately.
+description: Manages persistent terminal sessions for running interactive commands and background processes. Provides session creation, output capture, command sending, and monitoring capabilities. Use when running interactive commands or managing background processes that need separate monitoring.
 ---
 
 # Tmux Terminal Management

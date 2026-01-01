@@ -1,6 +1,6 @@
 ---
 name: nuttx-cmake-build
-description: Use when building NuttX firmware with CMake for faster compilation, managing multiple build configurations simultaneously, or setting up out-of-tree build directories to keep source code clean.
+description: Builds NuttX firmware with CMake for faster compilation and better dependency tracking. Supports managing multiple build configurations simultaneously and setting up out-of-tree build directories to keep source code clean. Use when building NuttX with CMake for faster compilation or managing multiple configurations.
 ---
 
 # NuttX CMake Build Workflows

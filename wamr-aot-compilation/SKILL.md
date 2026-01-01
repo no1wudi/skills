@@ -1,6 +1,6 @@
 ---
 name: wamr-aot-compilation
-description: Use when compiling WebAssembly modules to AOT format for improved performance in WAMR runtime, optimizing for specific CPU architectures like ARM or RISC-V, or targeting XIP (Execute In Place) scenarios to reduce RAM usage on resource-constrained devices.
+description: Compiles WebAssembly modules to AOT format for improved performance in WAMR runtime with support for ARM, RISC-V, and other architectures. Includes XIP (Execute In Place) optimization for resource-constrained devices and CPU-specific tuning. Use when compiling WebAssembly modules to native code or optimizing for specific architectures.
 ---
 
 # WAMR AOT Compilation Guide with wamrc

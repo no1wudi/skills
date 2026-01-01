@@ -1,6 +1,6 @@
 ---
 name: general-conventional-commit
-description: Use when creating a git commit. Default skill for git commits when no special requirements exist. Covers identifying repo, checking changes, grouping files, proposing commits, and executing git operations.
+description: Creates standardized git commits following Conventional Commits format. Covers identifying repos, checking changes, grouping files, proposing commits, and executing git operations. Use when creating git commits or reviewing changes before committing.
 ---
 
 # Creating Git Commits

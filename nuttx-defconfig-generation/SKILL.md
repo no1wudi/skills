@@ -1,6 +1,6 @@
 ---
 name: nuttx-defconfig-generation
-description: Use when creating new board configurations, maintaining custom defconfig files, or after making changes via menuconfig to generate minimal, portable configuration files that only contain settings differing from defaults.
+description: Generates minimal, portable defconfig files for NuttX board configurations that only contain settings differing from defaults. Includes out-of-tree board support and configuration best practices. Use when creating new board configurations, maintaining custom defconfig files, or after making changes via menuconfig.
 ---
 
 # NuttX Defconfig Generation Guide

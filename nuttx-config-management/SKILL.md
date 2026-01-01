@@ -1,6 +1,6 @@
 ---
 name: nuttx-config-management
-description: Use when modifying kernel configuration options programmatically, enabling or disabling features without menuconfig, or applying configuration changes via command-line during development.
+description: Modifies NuttX kernel configuration options programmatically using kconfig-tweak tool. Enables or disables features without menuconfig and applies configuration changes via command-line. Use when modifying kernel configuration options programmatically or applying configuration changes during development.
 ---
 
 # Managing NuttX Configuration with kconfig-tweak

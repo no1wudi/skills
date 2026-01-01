@@ -1,6 +1,6 @@
 ---
 name: nuttx-lckfb-esp32s3
-description: Use when working with the LCKFB ESP32S3 board including building, flashing, accessing interact terminal.
+description: Provides workflows for building, flashing, and interacting with LCKFB SZPI ESP32S3 board. Includes terminal access and debugging capabilities. Use when working with the LCKFB ESP32S3 board.
 ---
 
 # LCKFB ESP32S3 Board Interaction Guide

@@ -1,6 +1,6 @@
 ---
 name: nuttx-esp32s3-pca9557-gpio
-description: Use when controlling external GPIO pins on ESP32S3-LCKFB boards via the PCA9557 I2C GPIO expander, such as LCD chip select, power amplifier enable, or custom peripheral control through /dev/gpio* device nodes.
+description: Controls external GPIO pins on ESP32S3-LCKFB boards via PCA9557 I2C GPIO expander. Provides access to LCD chip select, power amplifier enable, and custom peripheral control through /dev/gpio* device nodes. Use when controlling external GPIO pins on ESP32S3-LCKFB boards via PCA9557.
 ---
 
 # ESP32S3-LCKFB PCA9557 GPIO Expander Usage Guide

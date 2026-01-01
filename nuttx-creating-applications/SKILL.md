@@ -1,6 +1,6 @@
 ---
 name: nuttx-creating-applications
-description: Use when developing new user applications, examples, or system utilities for NuttX, or when adding new code to the nuttx-apps repository following proper file structure and build conventions.
+description: Creates user applications, examples, and system utilities for NuttX following proper file structure and build conventions. Provides comprehensive instructions for adding code to the nuttx-apps repository. Use when developing new applications, examples, or system utilities for NuttX.
 ---
 
 # Creating NuttX Applications Guide

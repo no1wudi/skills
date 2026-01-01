@@ -1,6 +1,6 @@
 ---
 name: nuttx-creating-sensor-drivers
-description: Use when adding support for new I2C or SPI sensors like accelerometers, gyroscopes, magnetometers, or barometers, or when implementing sensor drivers that publish data via the uORB framework to /dev/uorb/sensor_* device nodes.
+description: Creates uORB-based sensor drivers for I2C and SPI sensors like accelerometers, gyroscopes, magnetometers, and barometers. Publishes data to /dev/uorb/sensor_* device nodes. Use when adding support for new sensors or implementing sensor drivers with uORB framework.
 ---
 
 # Writing NuttX Sensor Drivers Guide (uORB)

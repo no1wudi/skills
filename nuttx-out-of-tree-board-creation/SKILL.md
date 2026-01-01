@@ -1,6 +1,6 @@
 ---
 name: nuttx-out-of-tree-board-creation
-description: Use when adding support for completely new hardware boards that don't exist in upstream NuttX, or when creating custom board BSP packages that leverage existing chip-level drivers while maintaining board-specific code separately in out-of-tree directories.
+description: Creates custom NuttX boards for new hardware that don't exist upstream, leveraging existing chip-level drivers while maintaining board-specific code separately in out-of-tree directories. Supports ARM, RISC-V, xtensa, and other architectures. Use when adding support for completely new hardware boards or creating custom board BSP packages.
 ---
 
 # NuttX Out-of-Tree Board Creation Guide

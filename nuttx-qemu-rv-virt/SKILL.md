@@ -1,6 +1,6 @@
 ---
 name: nuttx-qemu-rv-virt
-description: Use when working with QEMU-based RV-Virt board for NuttX simulation and testing.
+description: Provides workflows for building, running, and interacting with QEMU RISC-V Virt board for NuttX simulation and testing. Use when working with QEMU-based RV-Virt board for NuttX simulation or testing.
 ---
 
 # QEMU RV-Virt Board Interaction Guide
