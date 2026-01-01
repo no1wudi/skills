@@ -1,11 +1,11 @@
 ---
-name: general-creating-skills
-description: Use when creating new skill directories, defining skill workflows, or adding new guides to the skills repository.
+name: general-creating-skill
+description: Use when creating a new skill directory, defining a skill workflow, or adding a new guide to the skills repository.
 ---
 
-# Creating Skills
+# Creating a Skill
 
-This guide provides instructions for creating new skills in the skills repository.
+This guide provides instructions for creating a new skill in the skills repository.
 
 ## 1. Plan the Skill
 
@@ -182,7 +182,7 @@ If adding a new skill category:
 # Update directory structure section
 ```
 general-creating-agents-files/
-general-creating-skills/     # New skill
+general-creating-skill/     # New skill
 nuttx-*/                     # Tech-stack specific skills
 README.md
 ```
