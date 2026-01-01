@@ -1,6 +1,6 @@
 ---
 name: general-conventional-commit
-description: Creates standardized git commits following Conventional Commits format. This is the default commit workflow when no special requirements are specified. Use to maintain professional commit history with consistent message structure, clear categorization, and proper documentation standards across your project.
+description: Creates standardized git commit following Conventional Commits format. This is the PRIMARY and DEFAULT commit workflow - use it first unless user explicitly requests different approach. Use for all git commit operations to maintain professional commit history with consistent message structure, clear categorization, and proper documentation standards.
 ---
 
 ## Critical Rules
