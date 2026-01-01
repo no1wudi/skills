@@ -1,7 +1,13 @@
 ---
 name: general-conventional-commit
-description: Creates standardized git commits following Conventional Commits format. Covers identifying repos, checking changes, grouping files, proposing commits, and executing git operations. Use when creating git commits or reviewing changes before committing.
+description: Creates standardized git commits following Conventional Commits format. This is the default commit workflow when no special requirements are specified. Use to maintain professional commit history with consistent message structure, clear categorization, and proper documentation standards across your project.
 ---
+
+## Critical Rules
+
+- **USER APPROVAL REQUIRED**: You MUST present commit proposal to user and get explicit approval before executing any non-readonly git operations (git add, git commit, git restore, etc.)
+- Read-only git operations (git status, git diff, git log, git show) do not require approval
+- Never proceed with git add or git commit until user responds with approval
 
 # Creating Git Commits
 
@@ -134,6 +140,8 @@ Approve this commit? (y/n)
 ```
 
 ## 7. Execute Git Operations
+
+**IMPORTANT: Wait for user approval from step 6 before executing any commands below.**
 
 ```bash
 # Stage specific files
