@@ -1,204 +1,139 @@
 ---
 name: nuttx-makefile-build
-description: Builds NuttX firmware using the traditional Makefile system for maximum board compatibility. Supports boards like ESP32S3 that require custom build systems and legacy projects. Use when building NuttX with Makefile system for maximum compatibility or working with boards requiring custom build systems.
+description: Builds NuttX using the traditional Makefile system for maximum board compatibility. Use when building NuttX with Makefile, working with custom build systems (ESP32S3), or legacy projects.
 ---
 
-# NuttX Makefile Build Workflows
+# NuttX Makefile Build
 
-## Build Output Management
+## BOARD_CONFIG Syntax
 
-**NuttX builds generate 1000+ lines of output**. Commands use `| tail -n 100` to limit output to the last 100 lines. Adjust as needed:
-- `tail -n 50` - Minimal output
-- `tail -n 100` - Balanced (recommended)
-- `tail -n 200` - More context
-- Remove `| tail -n N` for full output
+BOARD_CONFIG uses `<board>:<config>` format:
 
-## Configuration Syntax
+| Format | Example | Use Case |
+|--------|---------|----------|
+| `<board>:<config>` | `rv-virt:nsh` | In-tree boards |
+| Absolute path | `/path/to/configs/app` | Out-of-tree boards |
+| Directory | `path/to/myboard/config/nsh` | Custom boards |
 
+**Configuration examples:**
+```bash
+# In-tree board
+./tools/configure.sh rv-virt:nsh
+
+# Out-of-tree/custom board
+./tools/configure.sh path/to/myboard/config/nsh
+
+# Force distclean
+./tools/configure.sh -E rv-virt:nsh
+
+# Auto distclean if config changed
+./tools/configure.sh -e rv-virt:nsh
 ```
-<board-name>:<config-name>
-```
 
-- `<board-name>`: Board directory (e.g., `rv-virt`, `stm32f4discovery`)
-- `<config-name>`: Configuration directory (e.g., `nsh`, `knsh`)
+| Component | Description | Example |
+|-----------|-------------|---------|
+| `<board>` | Board directory name | `rv-virt`, `stm32f4discovery` |
+| `<config>` | Config directory name | `nsh`, `knsh` |
 
-## Essential Workflows
-
-### 1. Find Available Configurations
+## 1. Configure and Build
 
 ```bash
-cd path/to/nuttx
+# Configure
+./tools/configure.sh rv-virt:nsh
 
-# List all configurations
+# Build
+make -j8 2>&1 | tail -n 100
+
+# Check outputs
+ls -lh nuttx*
+```
+
+## 2. Find Available Configs
+
+```bash
+# List all
 ./tools/configure.sh -L
 
-# List for specific board (partial match)
+# List specific board
 ./tools/configure.sh -L rv-virt
 
-# Or list directory structure
+# Browse directory
 ls nuttx/boards/<arch>/<vendor>/<board>/configs/
 ```
 
-### 2. Initial Configuration and Build
+## 3. Rebuild After Changes
 
 ```bash
-cd path/to/nuttx
-
-# Configure board
-./tools/configure.sh rv-virt:nsh
-
-# Build (requires nuttx-config-management skill for config changes)
-make olddefconfig
-make -j8 2>&1 | tail -n 100
-
-# Check output
-ls -lh path/to/nuttx
-# nuttx       - Main ELF binary
-# nuttx.hex   - Hex format
-# nuttx.bin   - Raw binary
-```
-
-### 3. Incremental Build After Code Changes
-
-```bash
-cd path/to/nuttx
-
-# Make code changes
-vim path/to/source/file.c
-
-# Rebuild
+# Edit source, then rebuild
 make -j$(nproc) 2>&1 | tail -n 100
 ```
 
-### 4. Apply Configuration Changes
+## 4. Change Configuration
 
 ```bash
-cd path/to/nuttx
-
-# Modify .config using kconfig-tweak (requires nuttx-config-management skill)
-# kconfig-tweak --file .config --enable CONFIG_EXAMPLES_HELLO
-
-# Apply changes and rebuild
+# Modify .config (kconfig-tweak or menuconfig)
 make olddefconfig
 make -j8 2>&1 | tail -n 100
 ```
 
-### 5. Switch Between Configurations
+## 5. Clean Build
 
 ```bash
-cd path/to/nuttx
+# Full clean
+make distclean
+./tools/configure.sh rv-virt:nsh
+make -j8 2>&1 | tail -n 100
+```
 
-# Clean previous build
+## 6. Switch Configurations
+
+```bash
+# Clean previous
 make distclean
 
-# Configure for new board/config
+# Configure new
 ./tools/configure.sh stm32f4discovery:knsh
 
 # Build
 make -j8 2>&1 | tail -n 100
 ```
 
-### 6. Clean and Full Rebuild
+## 7. Save Configuration
 
 ```bash
-cd path/to/nuttx
-
-# Full clean
-make distclean
-
-# Reconfigure
-./tools/configure.sh rv-virt:nsh
-
-# Rebuild
-make olddefconfig
-make -j8 2>&1 | tail -n 100
-```
-
-### 7. Save Current Configuration
-
-```bash
-cd path/to/nuttx
-
-# Save as minimal defconfig
+# Save minimal defconfig
 make savedefconfig
-
-# Copy to board's configs directory
 cp defconfig boards/<arch>/<vendor>/<board>/configs/myconfig/defconfig
 ```
 
-### 8. Build Specific Targets
+## 8. Build Targets
 
 ```bash
-# Build all
-make all
-
-# Build kernel only
-make kernel
-
-# Build apps only
-make apps
-
-# Build specific application
-make apps/examples/hello
+make all              # All
+make kernel           # Kernel only
+make apps             # Apps only
+make apps/examples/hello  # Specific app
 ```
 
-## Configuration Management
+## 9. View Configuration
 
 ```bash
-# View specific option
 grep CONFIG_EXAMPLES_HELLO .config
-
-# View related options
-grep "CONFIG_I2C" .config
-
-# View first 100 lines
 head -n 100 .config
-```
-
-## Advanced Configure.sh Options
-
-```bash
-# List all configurations
-./tools/configure.sh -L
-
-# Enforce distclean before configuration
-./tools/configure.sh -E rv-virt:nsh
-
-# Auto distclean if config changed
-./tools/configure.sh -e rv-virt:nsh
-
-# Specify custom apps directory
-./tools/configure.sh -a path/to/my-apps rv-virt:nsh
-
-# Out-of-tree custom boards
-./tools/configure.sh path/to/mycustomboards/myboardname/config/nsh
 ```
 
 ## Troubleshooting
 
 ```bash
-# View more build output
+# More output
 make -j8 2>&1 | tail -n 200
 
-# Save full build log
+# Save full log
 make -j8 2>&1 > build.log
-tail -n 200 build.log
 
-# Verify configuration
-make olddefconfig
-
-# Force complete clean
+# Full reset
 make distclean
 rm -rf .config
-
-# Start fresh
 ./tools/configure.sh rv-virt:nsh
 make -j8 2>&1 | tail -n 100
 ```
-
-## When to Use Makefile
-
-- Maximum compatibility with all boards
-- Boards with custom build systems (ESP32S3, ESP32)
-- Legacy projects using Makefile
-- Simple builds without out-of-tree needs
