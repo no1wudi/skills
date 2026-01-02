@@ -1,6 +1,6 @@
 ---
 name: nuttx-lckfb-esp32s3
-description: Provides workflows for building, flashing, and interacting with LCKFB SZPI ESP32S3 board. Includes terminal access and debugging capabilities. Use when working with the LCKFB ESP32S3 board.
+description: Workflows for building, flashing, and interacting with LCKFB SZPI ESP32S3 board. Use this when working on the LCKFB ESP32S3 board with NuttX.
 ---
 
 # LCKFB ESP32S3 Board Interaction Guide
@@ -73,8 +73,6 @@ ls /dev                 # List device nodes
 esptool --chip esp32s3 --port /dev/ttyACM0 run
 ```
 
-## Critical Rules
-
-1. Reuse the nsh session if it already exist
-2. The nsh shell session only need to create once
-3. Always send Enter to flush error input on nsh session create
+# Critical Rules
+1. Use /dev/ttyACM0 for flashing firmware and resetting the board
+2. Use /dev/ttyUSB0 for serial console access (NSH shell)
