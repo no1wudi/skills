@@ -5,6 +5,22 @@ description: Builds NuttX using the traditional Makefile system for maximum boar
 
 # NuttX Makefile Build
 
+## Workflow
+
+1. **Determine target board and config**:
+   - **In-tree boards**: `<board>:<config>` format (e.g., `rv-virt:nsh`)
+     - If user specifies a board, use that board
+     - If user doesn't specify a board, default to `rv-virt`
+     - If user specifies a config, use that config
+     - If user doesn't specify a config, default to `nsh`
+   - **Out-of-tree/custom boards**: Use absolute path or directory path
+     - If user specifies a path, use that path directly
+   - Result: `<board>:<config>`, absolute path, or directory path
+
+2. **Configure**: `./tools/configure.sh <target>`
+
+3. **Build**: `make -j$(nproc) 2>&1 | tail -n 100`
+
 ## BOARD_CONFIG Syntax
 
 BOARD_CONFIG uses `<board>:<config>` format:

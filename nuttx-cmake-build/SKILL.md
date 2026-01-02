@@ -5,6 +5,22 @@ description: Builds NuttX with CMake for faster compilation and better dependenc
 
 # NuttX CMake Build
 
+## Workflow
+
+1. **Determine target board and config**:
+   - **In-tree boards**: `<board>:<config>` format (e.g., `rv-virt:nsh`)
+     - If user specifies a board, use that board
+     - If user doesn't specify a board, default to `rv-virt`
+     - If user specifies a config, use that config
+     - If user doesn't specify a config, default to `nsh`
+   - **Out-of-tree/custom boards**: Use absolute path or relative path
+     - If user specifies a path, use that path directly
+   - Result: `<board>:<config>`, absolute path, or relative path
+
+2. **Configure**: `cmake -GNinja -DBOARD_CONFIG=<target> -B <build-dir> nuttx`
+
+3. **Build**: `ninja -C <build-dir> -j$(nproc) 2>&1 | tail -n 100`
+
 ## BOARD_CONFIG Syntax
 
 BOARD_CONFIG supports two formats:
@@ -16,14 +32,14 @@ BOARD_CONFIG supports two formats:
 
 **Configuration examples:**
 ```bash
+# In-tree board
+cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build nuttx
+
 # Out-of-tree board (absolute path)
 cmake -GNinja -DBOARD_CONFIG=/home/user/myboard/configs/nsh -B build nuttx
 
 # Relative path from build dir
 cmake -GNinja -DBOARD_CONFIG=../../myboard/configs/nsh -B build nuttx
-
-# In-tree board (shorthand)
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build nuttx
 ```
 
 | Component | Description | Example |
