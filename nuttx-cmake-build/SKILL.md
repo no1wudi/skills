@@ -1,240 +1,131 @@
 ---
 name: nuttx-cmake-build
-description: Builds NuttX firmware with CMake for faster compilation and better dependency tracking. Supports managing multiple build configurations simultaneously and setting up out-of-tree build directories to keep source code clean. Use when building NuttX with CMake for faster compilation or managing multiple configurations.
+description: Builds NuttX with CMake for faster compilation and better dependency tracking. Use when building NuttX with CMake, managing multiple configurations simultaneously, or using out-of-tree board configurations.
 ---
 
-# NuttX CMake Build Workflows
+# NuttX CMake Build
 
-## Build Output Management
+## BOARD_CONFIG Syntax
 
-**NuttX builds generate 1000+ lines of output**. Commands use `| tail -n 100` to limit output to the last 100 lines. Adjust as needed:
-- `tail -n 50` - Minimal output
-- `tail -n 100` - Balanced (recommended)
-- `tail -n 200` - More context
-- Remove `| tail -n N` for full output
+BOARD_CONFIG supports two formats:
 
-## Configuration Syntax
+| Format | Example | Use Case |
+|--------|---------|----------|
+| `<board>:<config>` | `rv-virt:nsh` | In-tree boards |
+| Absolute path | `/path/to/configs/app` | Out-of-tree boards |
 
+**Configuration examples:**
+```bash
+# Out-of-tree board (absolute path)
+cmake -GNinja -DBOARD_CONFIG=/home/user/myboard/configs/nsh -B build nuttx
+
+# Relative path from build dir
+cmake -GNinja -DBOARD_CONFIG=../../myboard/configs/nsh -B build nuttx
+
+# In-tree board (shorthand)
+cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build nuttx
 ```
-cmake -GNinja -DBOARD_CONFIG=<board-name>:<config-name> -B <build-dir> <nuttx-source-dir>
-```
 
-- `<board-name>`: Board directory (e.g., `rv-virt`, `stm32f4discovery`)
-- `<config-name>`: Configuration directory (e.g., `nsh`, `knsh`)
-- `<build-dir>`: Build artifacts location (e.g., `build`, `../builds/nuttx`)
-- `<nuttx-source-dir>`: Path to NuttX source code
+| Component | Description | Example |
+|-----------|-------------|---------|
+| `<board>` | Board directory name | `rv-virt`, `stm32f746g-disco` |
+| `<config>` | Config directory name | `nsh`, `app`, `netnsh` |
+| `<build-dir>` | Build output directory | `build/`, `../builds/nuttx` |
+| `<nuttx-source>` | Path to NuttX source root | `nuttx/`, `/projects/nuttx` |
 
-**Note**: Some boards (ESP32S3, ESP32) use custom build systems. Use Makefile for these boards.
-
-## Essential Workflows
-
-### 1. Find Available Configurations
+## 1. Configure and Build
 
 ```bash
-# List available configurations by directory structure
-ls nuttx/boards/<arch>/<vendor>/<board>/configs/
-
-# Example for RISC-V QEMU:
-ls nuttx/boards/risc-v/qemu-rv/rv-virt/configs/
-# Output: nsh, knsh, knsh64, netnsh, etc.
-```
-
-### 2. Initial Configuration and Build
-
-```bash
-# Configure and create build directory
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B path/to/build path/to/nuttx
-
-# Apply config changes (requires nuttx-config-management skill)
-cmake -B path/to/build path/to/nuttx
+# Configure
+cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build nuttx
 
 # Build
-ninja -C path/to/build -j8 2>&1 | tail -n 100
+ninja -C build -j8 2>&1 | tail -n 100
 
-# Check output
-ls -lh path/to/build/nuttx
-# nuttx       - Main ELF binary
-# nuttx.hex   - Hex format
-# nuttx.bin   - Raw binary
+# Check outputs
+ls -lh build/nuttx*
 ```
 
-### 3. Incremental Build After Code Changes
+## 2. Find Available Configs
 
 ```bash
-# Make code changes
-vim path/to/source/file.c
-
-# Rebuild
-ninja -C path/to/build 2>&1 | tail -n 100
+ls nuttx/boards/<arch>/<vendor>/<board>/configs/
+# Example: ls nuttx/boards/risc-v/qemu-rv/rv-virt/configs/
 ```
 
-### 4. Apply Configuration Changes
+## 3. Rebuild After Changes
 
 ```bash
-# Modify .config using kconfig-tweak (requires nuttx-config-management skill)
-# kconfig-tweak --file path/to/build/.config --enable CONFIG_EXAMPLES_HELLO
-
-# Apply changes to build system
-cmake -B path/to/build path/to/nuttx
-
-# Rebuild
-ninja -C path/to/build -j8 2>&1 | tail -n 100
+# Edit source, then rebuild
+ninja -C build 2>&1 | tail -n 100
 ```
 
-### 5. Multiple Build Configurations in Parallel
+## 4. Change Configuration
 
 ```bash
-# Debug and release builds
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build-debug path/to/nuttx
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build-release path/to/nuttx
-
-# Build both in parallel
-ninja -C build-debug -j4 &
-ninja -C build-release -j4 &
-wait
+# Modify .config (kconfig-tweak or menuconfig)
+cmake -B build nuttx
+ninja -C build -j8 2>&1 | tail -n 100
 ```
 
-### 6. Different Boards in Parallel
+## 5. Clean Build
 
 ```bash
-# Configure multiple boards
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build-rv-virt path/to/nuttx
-cmake -GNinja -DBOARD_CONFIG=stm32f4discovery:nsh -B build-stm32 path/to/nuttx
+# Full clean: delete and recreate
+rm -rf build
+cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build nuttx
+ninja -C build -j8 2>&1 | tail -n 100
 
-# Build both in parallel
-ninja -C build-rv-virt -j4 &
-ninja -C build-stm32 -j4 &
-wait
+# Soft clean: keep config
+ninja -C build clean
+cmake -B build nuttx
+ninja -C build -j8 2>&1 | tail -n 100
 ```
 
-### 7. Out-of-Tree Builds
+## 6. Multiple Configurations
 
 ```bash
-# Build outside source tree (keeps source clean)
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B ../builds/nuttx-debug path/to/nuttx
-ninja -C ../builds/nuttx-debug
+# Debug
+cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build-debug nuttx
+ninja -C build-debug -j4
 
-# Another configuration
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B ../builds/nuttx-release path/to/nuttx
-ninja -C ../builds/nuttx-release
+# Release
+cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build-release nuttx
+ninja -C build-release -j4
+
+# Different board
+cmake -GNinja -DBOARD_CONFIG=stm32f4discovery:nsh -B build-stm32 nuttx
+ninja -C build-stm32 -j4
 ```
 
-### 8. Clean and Full Rebuild
+## 7. Build Targets
 
 ```bash
-# Delete build directory
-rm -rf path/to/build
-
-# Reconfigure
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B path/to/build path/to/nuttx
-
-# Rebuild
-ninja -C path/to/build -j8 2>&1 | tail -n 100
+ninja -C build              # All
+ninja -C build nuttx        # Kernel only
+ninja -C build apps         # Apps only
+ninja -C build -v           # Verbose
 ```
 
-### 9. Clean and Reconfigure
+## 8. View Configuration
 
 ```bash
-# Clean built files
-ninja -C path/to/build clean
-
-# Reconfigure
-cmake -B path/to/build path/to/nuttx
-
-# Rebuild
-ninja -C path/to/build -j8 2>&1 | tail -n 100
-```
-
-### 10. Build Specific Targets
-
-```bash
-# Build all
-ninja -C path/to/build all
-
-# Build kernel only
-ninja -C path/to/build nuttx
-
-# Build apps only
-ninja -C path/to/build apps
-
-# Build specific application
-ninja -C path/to/build hello
-
-# Verbose build output
-ninja -C path/to/build -v 2>&1 | tail -n 100
-```
-
-### 11. Save Current Configuration
-
-```bash
-# Copy current configuration for reuse
-cp path/to/build/.config my-custom-defconfig
-
-# Edit and use for future builds
-```
-
-## Configuration Management
-
-```bash
-# View specific option
-grep CONFIG_EXAMPLES_HELLO path/to/build/.config
-
-# View related options
-grep "CONFIG_I2C" path/to/build/.config
-
-# View first 100 lines
-head -n 100 path/to/build/.config
-```
-
-## Advanced CMake Options
-
-```bash
-# Specify generator (Ninja is recommended)
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build path/to/nuttx
-
-# Enable verbose output
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build path/to/nuttx --verbose
-
-# Specify toolchain file (cross-compilation)
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build path/to/nuttx -DCMAKE_TOOLCHAIN_FILE=path/to/toolchain.cmake
-
-# Enable ccache
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build path/to/nuttx -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
-# Generate compile_commands.json for IDE integration
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build path/to/nuttx -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+grep CONFIG_EXAMPLES_HELLO build/.config
+head -n 100 build/.config
 ```
 
 ## Troubleshooting
 
 ```bash
-# View more build output
-ninja -C path/to/build -j8 2>&1 | tail -n 200
+# More output
+ninja -C build -j8 2>&1 | tail -n 200
 
-# Save full build log
-ninja -C path/to/build -j8 2>&1 > build.log
-tail -n 200 build.log
+# Clear cache
+rm -rf build/CMakeCache.txt
+cmake -B build nuttx
 
-# Verify configuration
-cmake -B path/to/build path/to/nuttx
-
-# Check specific options
-grep "CONFIG_YOUR_OPTION=y" path/to/build/.config
-
-# Clear CMake cache
-rm -rf path/to/build/CMakeCache.txt
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B path/to/build path/to/nuttx
-
-# Force complete clean
-rm -rf path/to/build
-cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B path/to/build path/to/nuttx
-ninja -C path/to/build -j8 2>&1 | tail -n 100
+# Full reset
+rm -rf build
+cmake -GNinja -DBOARD_CONFIG=rv-virt:nsh -B build nuttx
+ninja -C build -j8 2>&1 | tail -n 100
 ```
-
-## When to Use CMake
-
-- Faster builds with Ninja backend
-- Better dependency tracking
-- Multiple build configurations (debug/release, multiple boards)
-- Out-of-tree builds for clean source directories
-- Modern development workflows and IDE integration
