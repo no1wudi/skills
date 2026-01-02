@@ -1,6 +1,6 @@
 ---
 name: nuttx-qemu-rv-virt
-description: Provides workflows for building, running, and interacting with QEMU RISC-V Virt board for NuttX simulation and testing. Use when working with QEMU-based RV-Virt board for NuttX simulation or testing.
+description: Workflows for building, running, and interacting with QEMU RISC-V Virt board for NuttX simulation and testing. Use when working with QEMU-based RV-Virt board for NuttX.
 ---
 
 # QEMU RV-Virt Board Interaction Guide
@@ -84,7 +84,32 @@ ls /dev                 # List device nodes
 uname -a                # Show system information
 ```
 
-## 5. Reload New Build
+## 5. (Optional) HostFS: Access Host Files from NSH
+
+> This feature requires `CONFIG_FS_HOSTFS=y` in your kernel configuration.
+
+Mount a host directory to access files from NuttX NSH:
+
+```bash
+# Mount host directory as /host (requires CONFIG_FS_HOSTFS=y in defconfig)
+tmux send-keys -t qemu 'mount -t hostfs -o fs=/home/user /host' Enter
+
+# Read host file
+tmux send-keys -t qemu 'cat /host/etc/passwd' Enter
+
+# Write to host file (overwrite)
+tmux send-keys -t qemu 'echo "hello" > /host/test.txt' Enter
+
+# Append to host file
+tmux send-keys -t qemu 'echo "world" >> /host/test.txt' Enter
+
+# Unmount when done
+tmux send-keys -t qemu 'umount /host' Enter
+```
+
+> **Note:** Directory listing does not work with hostfs. Use direct file paths to access files.
+
+## 7. Reload New Build
 
 Since QEMU does not support live reload, follow this workflow:
 
@@ -105,13 +130,12 @@ tmux new-session -d -s qemu 'qemu-system-riscv32 \
   -nographic'
 ```
 
-## 6. Exit QEMU
+## 8. Exit QEMU
 
 ```bash
 # Kill QEMU tmux session when done
 tmux kill-session -t qemu
 ```
 
-## Critical Rules
-
+# Critical Rules
 1. **Always restart QEMU after rebuilding** - QEMU does not support live reload
