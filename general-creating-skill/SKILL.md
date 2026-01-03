@@ -1,6 +1,6 @@
 ---
 name: general-creating-skill
-description: Creates new skill directories, defines skill workflows with proper structure, and adds guides to the skills repository. Use when creating or updating agent skills.
+description: Creates new skill files with proper structure and complete workflows. Use when adding or modifying agent skills.
 ---
 
 # Creating a Skill
