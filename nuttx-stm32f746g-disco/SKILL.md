@@ -7,11 +7,11 @@ description: Workflows and guides for building, flashing, running, and interacti
 
 ```bash
 # Configure and build for NuttX builtin config
-cmake -S nuttx -B build -DBOARD_CONFIG=stm32f746g-disco:nsh
+cmake -S nuttx -B build -G Ninja -DBOARD_CONFIG=stm32f746g-disco:nsh
 
 # Or configure for user specified config, for this example,
 # there have a path/to/config/apps/defconfig but only the dir path is necessary
-cmake -S nuttx -B build -DBOARD_CONFIG=path/to/config/apps
+cmake -S nuttx -B build -G Ninja -DBOARD_CONFIG=path/to/config/apps
 
 # Available configurations: nsh, fb, lvgl, netnsh, audio, nxterm, nxdemo etc
 
