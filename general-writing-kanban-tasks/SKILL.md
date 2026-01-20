@@ -36,8 +36,6 @@ Paste this into the kanban task description and fill in what you know.
 
 ```text
 Context / Env Setup
-- Repo/workdir:
-- Branch/revision:
 - Tooling/runtime:
 - Config/flags:
 - Constraints: (no network, read-only, etc.)
