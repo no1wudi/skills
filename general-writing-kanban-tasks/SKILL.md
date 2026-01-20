@@ -1,6 +1,6 @@
 ---
 name: general-writing-kanban-tasks
-description: Creates clear kanban task titles and descriptions that include environment setup, problem/symptoms, goal/definition of done, affected scope, verification plan (with a discovery step if commands are unknown), and a completion report to paste back into the task. Use when creating or updating kanban tasks for engineering work.
+description: Creates clear kanban task titles and descriptions that include environment setup, problem/symptoms, goal/definition of done, affected scope, and a verification plan (with a discovery step if commands are unknown). Use when creating or updating kanban tasks for engineering work.
 ---
 
 # Writing Kanban Tasks
@@ -10,10 +10,10 @@ This skill standardizes kanban task content so tasks are executable, scoped, and
 ## Core Rules
 
 1. **Actionable**: Every task must have a clear definition of done and a verification plan.
-2. **Dependency-light**: Prefer tasks that can proceed independently (no reliance on other tasks).
-3. **Split when needed**: If work naturally depends on something else, recommend follow-up tasks that are each independently actionable.
-4. **Facts vs guesses**: Keep observed behavior separate from hypotheses.
-5. **Close the loop**: Before finishing work, fill in the task's completion summary block.
+2. **Buildable**: Every task must include enough info to build the affected code (or include a discovery step that produces the exact build command/target). If it cannot be built in the current environment, the task must say where it *can* be built and what evidence to capture.
+3. **Dependency-light**: Prefer tasks that can proceed independently (no reliance on other tasks).
+4. **Split when needed**: If work naturally depends on something else, recommend follow-up tasks that are each independently actionable.
+5. **Facts vs guesses**: Keep observed behavior separate from hypotheses.
 
 ## 1. Create a Task (Workflow)
 
@@ -39,6 +39,9 @@ Context / Env Setup
 - Tooling/runtime:
 - Config/flags:
 - Constraints: (no network, read-only, etc.)
+- Build Notes:
+  - Build target(s): (service/app/package)
+  - How to build: (command)
 
 Inputs Required (So Work Can Start)
 - Logs/errors:
@@ -75,21 +78,12 @@ Verification Plan
   - Identify canonical commands for: build, lint/format, test
   - Record them here once found
 - Checks to run:
+  - <build command> (expected: succeeds)
   - <command> (expected: <result>)
   - <command> (expected: <result>)
 - Manual validation steps (if applicable):
   1) <step>
   2) <step>
-
-Completion Summary (Fill this in before finishing)
-- Outcome: Fixed | Root cause found (fix pending) | Not reproduced | Needs info
-- Repro steps: (final minimal repro, or "not found")
-- Root cause: (if known)
-- Narrowed scope: (files/modules/conditions)
-- Hypotheses (ranked): (if root cause not proven)
-- What changed: (fixes and/or debug instrumentation)
-- Verification results: (commands + results, or "not run" + why)
-- Follow-ups/risks: (concrete next steps)
 ```
 
 ### Step 3: If the Task Is Too Big, Split It
@@ -153,7 +147,7 @@ The agent is allowed to run commands and make small, scoped debug/instrumentatio
 
 6) Converge on an outcome
 - If root cause found: propose fix approach + verification plan
-- If root cause not found: publish a reliable repro (or explicit non-repro), narrowed scope, ranked hypotheses, and next steps
+- If root cause not found: publish a reliable repro (or explicit non-repro), narrowed scope, ranked hypotheses, and next steps (e.g., as task comments or in the PR)
 
 ## 3. Verification Guidance (Generic)
 
@@ -180,4 +174,3 @@ Prefer a verification plan that is executable by any assignee.
 - [ ] Scope lists in-scope and out-of-scope areas
 - [ ] Verification plan exists (or includes discovery step)
 - [ ] Task is dependency-light; otherwise includes follow-up task proposals
-- [ ] Completion summary block is present and filled at finish
