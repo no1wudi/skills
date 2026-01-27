@@ -1,6 +1,6 @@
 ---
-name: general-writing-kanban-tasks
-description: Creates clear kanban task titles and descriptions that include environment setup, problem/symptoms, goal/definition of done, affected scope, and a verification plan (with a discovery step if commands are unknown). Use when creating or updating kanban tasks for engineering work.
+name: general-creating-kanban-tasks
+description: Creates kanban task with titles and descriptions. Use when creating or updating kanban tasks.
 ---
 
 # Writing Kanban Tasks
