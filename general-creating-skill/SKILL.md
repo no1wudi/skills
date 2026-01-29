@@ -5,9 +5,25 @@ description: Creates new skill files with proper structure and complete workflow
 
 # Creating a Skill
 
-This guide provides instructions for creating a new skill in the skills repository.
+## 1. Analyze User Requirements
 
-## 1. Plan the Skill
+Before starting, understand what the user wants:
+
+1. **Identify the core goal**: What specific task or workflow should this skill cover?
+2. **Check existing skills**: Does a similar skill already exist?
+   ```bash
+   # List existing skills
+   ls
+   ```
+3. **Ask clarifying questions** if there are ambiguous points:
+   - What is the specific scope of this skill?
+   - Which technologies, tools, or workflows are involved?
+   - Should this be tech-stack specific or general-purpose?
+   - Are there any constraints or special requirements?
+
+**Do not proceed to create skill files until requirements are clear.**
+
+## 2. Plan the Skill
 
 Identify the workflows and scope of the new skill:
 
@@ -23,7 +39,7 @@ Determine if the skill is:
 - **Tech-stack specific** (e.g., `nuttx-`, `wamr-`)
 - **General-purpose** (prefix with `general-`)
 
-## 2. Create Skill Directory
+## 3. Create Skill Directory
 
 ```bash
 # Create the skill directory with proper naming
@@ -39,7 +55,7 @@ Naming rules:
 - 1-64 characters, no leading/trailing/consecutive hyphens
 - Must match the `name` field in SKILL.md frontmatter
 
-## 3. Write SKILL.md Frontmatter
+## 4. Write SKILL.md Frontmatter
 
 Create the SKILL.md file with YAML frontmatter:
 
@@ -70,7 +86,7 @@ description: Describes what the skill does and when to use it. Use when [specifi
 description: Builds NuttX firmware with CMake for faster compilation and better dependency tracking. Use when building NuttX or managing multiple build configurations.
 ```
 
-## 4. Write Skill Content
+## 5. Write Skill Content
 
 Structure the skill with numbered workflows:
 
@@ -109,7 +125,7 @@ command --flag
 - Include common options (`-j8`, `| tail -n 100`)
 - Add inline comments to explain why
 
-## 5. Add Quick Reference Sections
+## 6. Add Quick Reference Sections
 
 Include these sections if applicable:
 
@@ -134,7 +150,7 @@ command --advanced-flag
 ```
 ```
 
-## 6. Add Troubleshooting Section
+## 7. Add Troubleshooting Section
 
 ```markdown
 ## Troubleshooting
@@ -145,7 +161,7 @@ command --debug
 ```
 ```
 
-## 7. Add When to Use Section
+## 8. Add When to Use Section
 
 ```markdown
 ## When to Use This Skill
@@ -155,7 +171,7 @@ command --debug
 - Use case 3
 ```
 
-## 8. Update README.md (If Applicable)
+## 9. Update README.md (If Applicable)
 
 If adding a new skill category:
 
@@ -166,18 +182,6 @@ general-creating-agents-files/
 general-creating-skill/     # New skill
 nuttx-*/                     # Tech-stack specific skills
 README.md
-```
-
-## 9. Reference Existing Skills
-
-When creating a skill that relates to others:
-
-```markdown
-This skill requires the nuttx-config-management skill.
-
-Related skills:
-- nuttx-config-management - For modifying configurations
-- nuttx-makefile-build - For building with make
 ```
 
 ## Common Mistakes to Avoid
@@ -200,6 +204,4 @@ Related skills:
 - [ ] Minimal descriptive text (focus on workflows)
 - [ ] Troubleshooting section with actionable commands
 - [ ] "When to Use" section with clear criteria
-- [ ] Referenced skills exist
-- [ ] Optional fields added when appropriate (license, compatibility, metadata)
 - [ ] File is under 500 lines (spec recommendation)
