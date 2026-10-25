@@ -1,0 +1,24 @@
+# Skills
+
+Skills are directories containing domain-specific knowledge and guides for performing particular tasks. Each skill is organized as a directory with a `SKILL.md` file containing YAML frontmatter with `name` and `description` fields, following the Agent Skills specification.
+
+## Naming Conventions
+
+All skill directories under `skills/` follow consistent naming rules:
+
+### Skill Directory Names
+- Use **kebab-case** (lowercase letters with hyphens separating words)
+- Include domain prefix for disambiguation (e.g., `<domain>-<descriptive-name>`)
+- 1-64 characters, no leading/trailing hyphens, no consecutive hyphens
+
+### Skill File Names
+- Must be named `SKILL.md` (all caps)
+- Contains YAML frontmatter with `name` and `description` fields
+- All original markdown content preserved below frontmatter
+
+### Path Structure Pattern
+```
+skills/{domain}-{descriptive-name}/SKILL.md
+```
+- `{domain}`: Technology domain prefix (e.g., `wamr`, or `general` for general-purpose skills)
+- `{descriptive-name}`: Hyphenated description of the skill's purpose
